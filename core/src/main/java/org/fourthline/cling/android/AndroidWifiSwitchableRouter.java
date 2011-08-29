@@ -23,6 +23,10 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.Collections;
+import java.util.List;
 import org.fourthline.cling.UpnpServiceConfiguration;
 import org.fourthline.cling.model.ModelUtil;
 import org.fourthline.cling.protocol.ProtocolFactory;
@@ -51,24 +55,35 @@ public class AndroidWifiSwitchableRouter extends SwitchableRouterImpl {
             if (!intent.getAction().equals(ConnectivityManager.CONNECTIVITY_ACTION)) return;
             NetworkInfo wifiInfo = getConnectivityManager().getNetworkInfo(ConnectivityManager.TYPE_WIFI);
             // We can't listen to "is available" or simply "is switched on", we have to make sure it's connected
-            if (!wifiInfo.isConnected()) {
-                log.info("WiFi state changed, trying to disable router");
-                disable();
-            } else {
-                log.info("WiFi state changed, trying to enable router");
-                enable();
+            NetworkInterface ethernet = null;
+            try {
+                List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
+                for (NetworkInterface iface : interfaces) {
+                    if (iface.getDisplayName().equals("eth0")) {
+                        ethernet = iface;
+                        break;
+                    }
+                }
+                if (!wifiInfo.isConnected() && (ethernet != null) && !ethernet.isUp()) {
+                    log.info("WiFi state changed, trying to disable router");
+                    disable();
+                } else {
+                    log.info("WiFi state changed, trying to enable router");
+                    enable();
+                }
+            } catch (SocketException sx) {
             }
         }
     };
 
-    final private WifiManager wifiManager;
+    final private Object manager;
     final private ConnectivityManager connectivityManager;
     private WifiManager.MulticastLock multicastLock;
 
     public AndroidWifiSwitchableRouter(UpnpServiceConfiguration configuration, ProtocolFactory protocolFactory,
-                                       WifiManager wifiManager, ConnectivityManager connectivityManager) {
+                                       Object manager, ConnectivityManager connectivityManager) {
         super(configuration, protocolFactory);
-        this.wifiManager = wifiManager;
+        this.manager = manager;
         this.connectivityManager = connectivityManager;
 
         // Let's not wait for the first "wifi switched on" broadcast (which might be late on
@@ -85,7 +100,11 @@ public class AndroidWifiSwitchableRouter extends SwitchableRouterImpl {
     }
 
     protected WifiManager getWifiManager() {
-        return wifiManager;
+        if (manager instanceof WifiManager) {
+            return (WifiManager)manager;
+        } else {
+            return null;
+        }
     }
 
     protected ConnectivityManager getConnectivityManager() {
@@ -99,8 +118,10 @@ public class AndroidWifiSwitchableRouter extends SwitchableRouterImpl {
             boolean enabled;
             if ((enabled = super.enable())) {
                 // Enable multicast on the WiFi network interface, requires android.permission.CHANGE_WIFI_MULTICAST_STATE
-                multicastLock = getWifiManager().createMulticastLock(getClass().getSimpleName());
-                multicastLock.acquire();
+                if (getWifiManager() != null) {
+                    multicastLock = getWifiManager().createMulticastLock(getClass().getSimpleName());
+                    multicastLock.acquire();
+                }
             }
             return enabled;
         } finally {

@@ -24,6 +24,12 @@ import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.wifi.WifiManager;
 import android.os.IBinder;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 import org.fourthline.cling.UpnpService;
 import org.fourthline.cling.UpnpServiceConfiguration;
 import org.fourthline.cling.UpnpServiceImpl;
@@ -54,20 +60,65 @@ public class AndroidUpnpServiceImpl extends Service {
     public void onCreate() {
         super.onCreate();
 
-        final WifiManager wifiManager =
-                (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        final Object wifiManager = getSystemService(Context.WIFI_SERVICE);
+        final Object ethernetManager = getSystemService("ethernet");
+        Object tmpManager = null;
+
+        if (ethernetManager != null) {
+            /**
+             * Implies googleTV
+             */
+            NetworkInterface ethernet = null;
+            NetworkInterface wifi = null;
+            List<NetworkInterface> interfaces;
+            try {
+                interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
+
+                for (NetworkInterface iface : interfaces) {
+                    if (iface.getDisplayName().equals("eth0")) {
+                        ethernet = iface;
+                        break;
+                    }
+                }
+
+                if (ethernet != null) {
+                    Iterator<InterfaceAddress> add = ethernet.getInterfaceAddresses().iterator();
+
+                    while (add.hasNext()) {
+                        InterfaceAddress temp = add.next();
+                        if (temp.getBroadcast() != null) {
+                            tmpManager = ethernetManager;
+                            break;
+                        }
+                    }
+                } else {
+                    tmpManager = wifiManager;
+                }
+
+                if (tmpManager == null) {
+                    tmpManager = wifiManager;
+                }
+            } catch (SocketException e) {
+                // TODO Auto-generated catch block
+                tmpManager = wifiManager;
+            }
+        } else {
+            tmpManager = wifiManager;
+        }
+
+        final Object manager = tmpManager;
 
         final ConnectivityManager connectivityManager =
                 (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        upnpService = new UpnpServiceImpl(createConfiguration(wifiManager)) {
+        upnpService = new UpnpServiceImpl(createConfiguration(manager)) {
             @Override
             protected Router createRouter(ProtocolFactory protocolFactory, Registry registry) {
                 AndroidWifiSwitchableRouter router =
                         AndroidUpnpServiceImpl.this.createRouter(
                                 getConfiguration(),
                                 protocolFactory,
-                                wifiManager,
+                                manager,
                                 connectivityManager
                         );
                 if (!ModelUtil.ANDROID_EMULATOR && isListeningForConnectivityChanges()) {
@@ -83,15 +134,15 @@ public class AndroidUpnpServiceImpl extends Service {
 
     }
 
-    protected AndroidUpnpServiceConfiguration createConfiguration(WifiManager wifiManager) {
+    protected AndroidUpnpServiceConfiguration createConfiguration(Object wifiManager) {
         return new AndroidUpnpServiceConfiguration(wifiManager);
     }
 
     protected AndroidWifiSwitchableRouter createRouter(UpnpServiceConfiguration configuration,
                                                       ProtocolFactory protocolFactory,
-                                                      WifiManager wifiManager,
+                                                      Object manager,
                                                       ConnectivityManager connectivityManager) {
-        return new AndroidWifiSwitchableRouter(configuration, protocolFactory, wifiManager, connectivityManager);
+        return new AndroidWifiSwitchableRouter(configuration, protocolFactory, manager, connectivityManager);
     }
 
     @Override

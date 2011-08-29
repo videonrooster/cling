@@ -17,7 +17,10 @@
 
 package org.fourthline.cling.android;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
 import android.net.wifi.WifiManager;
+import android.util.Log;
 import org.fourthline.cling.model.Constants;
 import org.fourthline.cling.model.ModelUtil;
 import org.fourthline.cling.transport.spi.InitializationException;
@@ -56,9 +59,8 @@ public class AndroidNetworkAddressFactory implements NetworkAddressFactory {
     /**
      * Defaults to an ephemeral port.
      */
-    public AndroidNetworkAddressFactory(WifiManager wifiManager) throws InitializationException {
-
-        wifiInterface = getWifiNetworkInterface(wifiManager);
+    public AndroidNetworkAddressFactory(Object manager) throws InitializationException {
+        wifiInterface = getWifiNetworkInterface(manager);
 
         if (wifiInterface == null)
             throw new InitializationException("Could not discover WiFi network interface");
@@ -147,14 +149,14 @@ public class AndroidNetworkAddressFactory implements NetworkAddressFactory {
 
     // Code from: http://www.gubatron.com/blog/2010/09/19/android-programming-how-to-obtain-the-wifis-corresponding-networkinterface/
 
-    public static NetworkInterface getWifiNetworkInterface(WifiManager manager) {
+    public static NetworkInterface getWifiNetworkInterface(Object manager) {
         if (ModelUtil.ANDROID_EMULATOR) {
             return getEmulatorWifiNetworkInterface(manager);
         }
-        return getRealWifiNetworkInterface(manager);
+        return getActualNetworkInterface(manager);
     }
 
-    public static NetworkInterface getEmulatorWifiNetworkInterface(WifiManager manager) {
+    public static NetworkInterface getEmulatorWifiNetworkInterface(Object manager) {
         // Return the first network interface that is not loopback
         try {
             List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
@@ -167,6 +169,31 @@ public class AndroidNetworkAddressFactory implements NetworkAddressFactory {
         } catch (Exception ex) {
             throw new InitializationException("Could not find emulator's network interface: " + ex, ex);
         }
+        return null;
+    }
+
+    public static NetworkInterface getActualNetworkInterface(Object manager) {
+        if (manager instanceof WifiManager) {
+            return getRealWifiNetworkInterface ((WifiManager)manager);
+        } else {
+            try {
+                List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
+                for (NetworkInterface iface : interfaces) {
+                    if (iface.getDisplayName().equals("eth0")) {
+                        List<InetAddress> addresses = Collections.list(iface.getInetAddresses());
+                        for (InetAddress address : addresses) {
+                            if (!address.isLoopbackAddress()) {
+                                return iface;
+                            }
+                        }
+                    }
+                }
+            } catch (Exception ex) {
+                throw new InitializationException("Could not find emulator's network interface: " + ex, ex);
+            }
+        }
+        // Return the first network interface that is not loopback
+
         return null;
     }
 

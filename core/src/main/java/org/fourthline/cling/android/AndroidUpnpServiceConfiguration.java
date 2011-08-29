@@ -17,6 +17,7 @@
 
 package org.fourthline.cling.android;
 
+import android.content.Context;
 import android.net.wifi.WifiManager;
 import org.fourthline.cling.DefaultUpnpServiceConfiguration;
 import org.fourthline.cling.binding.xml.DeviceDescriptorBinder;
@@ -68,16 +69,16 @@ public class AndroidUpnpServiceConfiguration extends DefaultUpnpServiceConfigura
 
     final private static Logger log = Logger.getLogger(AndroidUpnpServiceConfiguration.class.getName());
 
-    final protected WifiManager wifiManager;
+    final protected Object manager;
 
-    public AndroidUpnpServiceConfiguration(WifiManager wifiManager) {
-        this(wifiManager, 0); // Ephemeral port
+    public AndroidUpnpServiceConfiguration(Object manager) {
+        this(manager, 0); // Ephemeral port
     }
 
-    public AndroidUpnpServiceConfiguration(WifiManager wifiManager, int streamListenPort) {
+    public AndroidUpnpServiceConfiguration(Object manager, int streamListenPort) {
         super(streamListenPort, false);
 
-        this.wifiManager = wifiManager;
+        this.manager = manager;
 
         // This should be the default on Android 2.1 but it's not set by default
         System.setProperty("org.xml.sax.driver","org.xmlpull.v1.sax2.Driver");
@@ -85,7 +86,7 @@ public class AndroidUpnpServiceConfiguration extends DefaultUpnpServiceConfigura
 
     @Override
     protected NetworkAddressFactory createNetworkAddressFactory(int streamListenPort) {
-        return new AndroidNetworkAddressFactory(wifiManager);
+        return new AndroidNetworkAddressFactory(manager);
     }
 
     @Override
