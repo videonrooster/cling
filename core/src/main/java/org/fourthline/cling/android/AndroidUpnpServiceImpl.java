@@ -59,7 +59,10 @@ public class AndroidUpnpServiceImpl extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        InitializeManager();
+    }
 
+    public void InitializeManager() {
         final Object wifiManager = getSystemService(Context.WIFI_SERVICE);
         final Object ethernetManager = getSystemService("ethernet");
         Object tmpManager = null;
@@ -147,8 +150,9 @@ public class AndroidUpnpServiceImpl extends Service {
 
     @Override
     public void onDestroy() {
-        if (!ModelUtil.ANDROID_EMULATOR && isListeningForConnectivityChanges())
+        if (!ModelUtil.ANDROID_EMULATOR && isListeningForConnectivityChanges()) {
             unregisterReceiver(((AndroidWifiSwitchableRouter) upnpService.getRouter()).getBroadcastReceiver());
+        }
         upnpService.shutdown();
     }
 
@@ -178,6 +182,16 @@ public class AndroidUpnpServiceImpl extends Service {
         public ControlPoint getControlPoint() {
             return upnpService.getControlPoint();
         }
-    }
 
+        public void ReInitializeManager() {
+            if (!ModelUtil.ANDROID_EMULATOR && isListeningForConnectivityChanges()) {
+                try {
+                    unregisterReceiver(((AndroidWifiSwitchableRouter) upnpService.getRouter()).getBroadcastReceiver());
+                } catch (Exception ex) {
+                }
+            }
+            upnpService.shutdown();
+            InitializeManager();
+        }
+    }
 }

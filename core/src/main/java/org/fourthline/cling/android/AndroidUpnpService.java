@@ -90,4 +90,9 @@ public interface AndroidUpnpService {
      */
     public ControlPoint getControlPoint();
 
+    /**
+     * @return ReInitialize The Manager.
+     */
+    public void ReInitializeManager();
+
 }
