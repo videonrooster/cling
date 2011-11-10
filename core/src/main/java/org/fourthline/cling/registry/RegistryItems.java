@@ -70,16 +70,22 @@ abstract class RegistryItems<D extends Device, S extends GENASubscription> {
      *         no device with the given UDN has been registered.
      */
     D get(UDN udn, boolean rootOnly) {
-        for (RegistryItem<UDN, D> item : deviceItems) {
-            D device = item.getItem();
-            if (device.getIdentity().getUdn().equals(udn)) {
-                return device;
+        try {
+            for (RegistryItem<UDN, D> item : deviceItems) {
+                D device = item.getItem();
+                if (device.getIdentity().getUdn().equals(udn)) {
+                    return device;
+                }
+                if (!rootOnly) {
+                    D foundDevice = (D)item.getItem().findDevice(udn);
+                    if (foundDevice != null) return foundDevice;
+                }
             }
-            if (!rootOnly) {
-                D foundDevice = (D)item.getItem().findDevice(udn);
-                if (foundDevice != null) return foundDevice;
-            }
+        } catch (Exception ex) {
+            // We've seen IncompatibleClassChangeError here. Return null because we don't
+            // have a better solution for now.
         }
+
         return null;
     }
 
