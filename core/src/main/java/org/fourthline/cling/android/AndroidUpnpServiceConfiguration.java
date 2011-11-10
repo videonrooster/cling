@@ -19,6 +19,7 @@ package org.fourthline.cling.android;
 
 import android.content.Context;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import org.fourthline.cling.DefaultUpnpServiceConfiguration;
 import org.fourthline.cling.binding.xml.DeviceDescriptorBinder;
 import org.fourthline.cling.binding.xml.ServiceDescriptorBinder;
@@ -31,6 +32,13 @@ import org.fourthline.cling.transport.impl.apache.StreamServerImpl;
 import org.fourthline.cling.transport.spi.NetworkAddressFactory;
 import org.fourthline.cling.transport.spi.StreamClient;
 import org.fourthline.cling.transport.spi.StreamServer;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.FactoryConfigurationError;
+import org.fourthline.cling.transport.impl.GENAEventProcessorImpl;
+import org.fourthline.cling.transport.impl.SOAPActionProcessorImpl;
+import org.fourthline.cling.transport.spi.GENAEventProcessor;
+import org.fourthline.cling.transport.spi.SOAPActionProcessor;
+
 
 import java.util.concurrent.Executor;
 import java.util.logging.Logger;
@@ -171,4 +179,35 @@ public class AndroidUpnpServiceConfiguration extends DefaultUpnpServiceConfigura
         */
     }
 
+    protected DocumentBuilderFactory createDocumentBuilderFactory() throws FactoryConfigurationError {
+        if (Build.VERSION.SDK_INT >= 8) {
+            try {
+                Class clazz = Class.forName("net.sf.saxon.dom.DocumentBuilderFactoryImpl");
+                return (DocumentBuilderFactory)clazz.newInstance();
+            } catch (Throwable e) {
+            }
+        }
+
+        return DocumentBuilderFactory.newInstance();
+    }
+
+    @Override
+    protected SOAPActionProcessor createSOAPActionProcessor() {
+        return new SOAPActionProcessorImpl() {
+            @Override
+            protected DocumentBuilderFactory createDocumentBuilderFactory() throws FactoryConfigurationError {
+                return AndroidUpnpServiceConfiguration.this.createDocumentBuilderFactory();
+            }
+        };
+    }
+
+    @Override
+    protected GENAEventProcessor createGENAEventProcessor() {
+        return new GENAEventProcessorImpl() {
+            @Override
+            protected DocumentBuilderFactory createDocumentBuilderFactory() throws FactoryConfigurationError {
+                return AndroidUpnpServiceConfiguration.this.createDocumentBuilderFactory();
+            }
+        };
+    }
 }
