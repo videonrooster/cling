@@ -124,6 +124,8 @@ public class HttpServerConnectionUpnpStream extends UpnpStream {
             responseException(ex);
         } catch (HttpException ex) {
             throw new UnsupportedDataException("Request malformed: " + ex.getMessage(), ex);
+        } catch (OutOfMemoryError ex) {
+            log.fine("HttpServerConnectionUpnpStream Out of memory exception");
         } finally {
             try {
                 connection.shutdown();
