@@ -45,7 +45,12 @@ public class IntegerDatatype extends AbstractDatatype<Integer> {
             }
             return value;
         } catch (NumberFormatException ex) {
-            throw new InvalidValueException("Can't convert string to number: " + s, ex);
+        	// BBMOD: PacketVideo TMM Player sends RelCount an AbsCount equal to NOT_IMPLEMENTED in GetPositionInfoResponse while it is not allowed
+        	if(s.equals("NOT_IMPLEMENTED")) {
+        		return getMaxValue();
+        	} else {
+            	throw new InvalidValueException("Can't convert string to number: " + s, ex);
+        	}
         }
     }
 

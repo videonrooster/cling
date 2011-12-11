@@ -42,6 +42,9 @@ import java.util.List;
  */
 public class RemoteDevice extends Device<RemoteDeviceIdentity, RemoteDevice, RemoteService> {
 
+	public RemoteDevice() {
+	}
+	
     public RemoteDevice(RemoteDeviceIdentity identity) throws ValidationException {
         super(identity);
     }

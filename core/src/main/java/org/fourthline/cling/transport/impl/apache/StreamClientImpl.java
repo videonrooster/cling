@@ -20,33 +20,6 @@ package org.fourthline.cling.transport.impl.apache;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpEntityEnclosingRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpVersion;
-import org.apache.http.MethodNotSupportedException;
-import org.apache.http.StatusLine;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.conn.params.ConnManagerParams;
-import org.apache.http.conn.scheme.PlainSocketFactory;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.scheme.SchemeRegistry;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
-import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.CoreProtocolPNames;
-import org.apache.http.params.DefaultedHttpParams;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
-import org.apache.http.params.HttpProtocolParams;
-import org.apache.http.util.EntityUtils;
 import org.fourthline.cling.model.message.StreamRequestMessage;
 import org.fourthline.cling.model.message.StreamResponseMessage;
 import org.fourthline.cling.model.message.UpnpHeaders;
@@ -56,6 +29,34 @@ import org.fourthline.cling.model.message.UpnpResponse;
 import org.fourthline.cling.transport.spi.InitializationException;
 import org.fourthline.cling.transport.spi.StreamClient;
 import org.seamless.util.Exceptions;
+
+import com.bubblesoft.org.apache.http.HttpEntity;
+import com.bubblesoft.org.apache.http.HttpEntityEnclosingRequest;
+import com.bubblesoft.org.apache.http.HttpResponse;
+import com.bubblesoft.org.apache.http.HttpVersion;
+import com.bubblesoft.org.apache.http.MethodNotSupportedException;
+import com.bubblesoft.org.apache.http.StatusLine;
+import com.bubblesoft.org.apache.http.client.ClientProtocolException;
+import com.bubblesoft.org.apache.http.client.ResponseHandler;
+import com.bubblesoft.org.apache.http.client.methods.HttpGet;
+import com.bubblesoft.org.apache.http.client.methods.HttpPost;
+import com.bubblesoft.org.apache.http.client.methods.HttpUriRequest;
+import com.bubblesoft.org.apache.http.conn.params.ConnManagerParams;
+import com.bubblesoft.org.apache.http.conn.scheme.PlainSocketFactory;
+import com.bubblesoft.org.apache.http.conn.scheme.Scheme;
+import com.bubblesoft.org.apache.http.conn.scheme.SchemeRegistry;
+import com.bubblesoft.org.apache.http.entity.ByteArrayEntity;
+import com.bubblesoft.org.apache.http.entity.StringEntity;
+import com.bubblesoft.org.apache.http.impl.client.DefaultHttpClient;
+import com.bubblesoft.org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
+import com.bubblesoft.org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import com.bubblesoft.org.apache.http.params.BasicHttpParams;
+import com.bubblesoft.org.apache.http.params.CoreProtocolPNames;
+import com.bubblesoft.org.apache.http.params.DefaultedHttpParams;
+import com.bubblesoft.org.apache.http.params.HttpConnectionParams;
+import com.bubblesoft.org.apache.http.params.HttpParams;
+import com.bubblesoft.org.apache.http.params.HttpProtocolParams;
+import com.bubblesoft.org.apache.http.util.EntityUtils;
 
 /**
  * Implementation based on <a href="http://hc.apache.org/">Apache HTTP Components</a>.
@@ -74,13 +75,15 @@ public class StreamClientImpl implements StreamClient<StreamClientConfigurationI
     final protected DefaultHttpClient httpClient;
     final protected HttpParams globalParams = new BasicHttpParams();
 
-    public StreamClientImpl(StreamClientConfigurationImpl configuration) throws InitializationException {
+   public StreamClientImpl(StreamClientConfigurationImpl configuration) throws InitializationException {
         this.configuration = configuration;
 
-        ConnManagerParams.setMaxTotalConnections(globalParams, getConfiguration().getMaxTotalConnections());
         HttpConnectionParams.setConnectionTimeout(globalParams, getConfiguration().getConnectionTimeoutSeconds() * 1000);
         HttpConnectionParams.setSoTimeout(globalParams, getConfiguration().getDataReadTimeoutSeconds() * 1000);
         HttpProtocolParams.setContentCharset(globalParams, getConfiguration().getContentCharset());
+        HttpProtocolParams.setUseExpectContinue(globalParams, false);
+
+        
         if(getConfiguration().getSocketBufferSize() != -1) {
         	
         	// Android configuration will set this to 8192 as its httpclient is based 
@@ -90,35 +93,26 @@ public class StreamClientImpl implements StreamClient<StreamClientConfigurationI
         	
         	HttpConnectionParams.setSocketBufferSize(globalParams, getConfiguration().getSocketBufferSize());
         }
-        HttpConnectionParams.setStaleCheckingEnabled(globalParams, getConfiguration().getStaleCheckingEnabled());
+        //HttpConnectionParams.setStaleCheckingEnabled(globalParams, getConfiguration().getStaleCheckingEnabled());
 
-
-        // This is a pretty stupid API... https://issues.apache.org/jira/browse/HTTPCLIENT-805
         SchemeRegistry registry = new SchemeRegistry();
-        registry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80)); // The 80 here is... useless
-        clientConnectionManager = new ThreadSafeClientConnManager(globalParams, registry);
+        registry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
+        
+        clientConnectionManager = new ThreadSafeClientConnManager(registry);
+        clientConnectionManager.setMaxTotal(getConfiguration().getMaxTotalConnections());
+        clientConnectionManager.setDefaultMaxPerRoute(100);
+        //ConnManagerParams.setMaxTotalConnections(globalParams, getConfiguration().getMaxTotalConnections());
+        //clientConnectionManager = new ThreadSafeClientConnManager(globalParams, registry);
+        
+
         httpClient = new DefaultHttpClient(clientConnectionManager, globalParams);
+
+        
         if(getConfiguration().getRequestRetryCount() != -1) {
         	httpClient.setHttpRequestRetryHandler(new DefaultHttpRequestRetryHandler(getConfiguration().getRequestRetryCount(), false));
         }
         
-        /*
-        // TODO: Ugh! And it turns out that by default it doesn't even use persistent connections properly!
-        @Override
-        protected ConnectionReuseStrategy createConnectionReuseStrategy() {
-            return new NoConnectionReuseStrategy();
-        }
-
-        @Override
-        protected ConnectionKeepAliveStrategy createConnectionKeepAliveStrategy() {
-            return new ConnectionKeepAliveStrategy() {
-                public long getKeepAliveDuration(HttpResponse httpResponse, HttpContext httpContext) {
-                    return 0;
-                }
-            };
-        }
-        httpClient.removeRequestInterceptorByClass(RequestConnControl.class);
-        */
+        
     }
     
     @Override

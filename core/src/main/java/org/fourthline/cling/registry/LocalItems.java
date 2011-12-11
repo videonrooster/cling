@@ -76,7 +76,9 @@ class LocalItems extends RegistryItems<LocalDevice, LocalGENASubscription> {
         deviceItems.add(localItem);
         log.fine("Registered local device: " + localItem);
 
-        advertiseAlive(localDevice);
+        if(localDevice.isAdvertising()) {
+       		 advertiseAlive(localDevice);
+        }
 
         for (RegistryListener listener : registry.getListeners()) {
             listener.localDeviceAdded(registry, localDevice);
@@ -134,7 +136,9 @@ class LocalItems extends RegistryItems<LocalDevice, LocalGENASubscription> {
                 }
             }
 
-            advertiseByebye(localDevice, !shuttingDown);
+            if(localDevice.isAdvertising()) {
+         		advertiseByebye(localDevice, !shuttingDown);
+            }
 
             if (!shuttingDown) {
                 for (final RegistryListener listener : registry.getListeners()) {
@@ -174,7 +178,7 @@ class LocalItems extends RegistryItems<LocalDevice, LocalGENASubscription> {
         // Refresh expired local devices
         Set<RegistryItem<UDN, LocalDevice>> expiredLocalItems = new HashSet();
         for (RegistryItem<UDN, LocalDevice> localItem : deviceItems) {
-            if (localItem.getExpirationDetails().hasExpired(true)) {
+            if (localItem.getItem().isAdvertising() && localItem.getExpirationDetails().hasExpired(true)) {
                 log.finer("Local item has expired: " + localItem);
                 expiredLocalItems.add(localItem);
             }
@@ -234,5 +238,17 @@ class LocalItems extends RegistryItems<LocalDevice, LocalGENASubscription> {
             prot.run();
         }
     }
+
+	public void setDeviceAdvertising(LocalDevice localDevice, boolean advertising) {
+		if(advertising == localDevice.isAdvertising()) return ;
+		
+		localDevice.setAdvertising(advertising);
+		
+		if(advertising) {
+			advertiseAlive(localDevice);
+		} else {
+			advertiseByebye(localDevice, true);
+		}
+	}
 
 }

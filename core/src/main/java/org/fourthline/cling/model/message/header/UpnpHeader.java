@@ -17,12 +17,12 @@
 
 package org.fourthline.cling.model.message.header;
 
-import org.seamless.util.Exceptions;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.seamless.util.Exceptions;
 
 /**
  * Transforms known and standardized UPnP/HTTP headers from/to string representation.
@@ -62,7 +62,7 @@ public abstract class UpnpHeader<T> {
         SERVER("SERVER", ServerHeader.class),
         LOCATION("LOCATION", LocationHeader.class),
         MAX_AGE("CACHE-CONTROL", MaxAgeHeader.class),
-        USER_AGENT("USER-AGENT", UserAgentHeader.class),
+        USER_AGENT("USER-AGENT", UserAgentHeader.class), // disable checks for User-Agent to always be transmitted
         CONTENT_TYPE("CONTENT-TYPE", ContentTypeHeader.class),
         MAN("MAN", MANHeader.class),
         MX("MX", MXHeader.class),

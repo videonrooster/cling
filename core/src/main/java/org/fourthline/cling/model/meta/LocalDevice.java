@@ -311,5 +311,15 @@ public class LocalDevice extends Device<DeviceIdentity, LocalDevice, LocalServic
     public LocalDevice findDevice(UDN udn) {
         return find(udn, this);
     }
+    
+    boolean _advertising = false;
+    
+    public void setAdvertising(boolean b) {
+    	_advertising = b;
+    }
+    
+    public boolean isAdvertising() {
+    	return _advertising;
+    }
 
 }

@@ -29,6 +29,8 @@ package org.fourthline.cling.transport.spi;
  */
 public class UnsupportedDataException extends RuntimeException {
 
+	Object _data;
+	
     public UnsupportedDataException(String s) {
         super(s);
     }
@@ -36,4 +38,15 @@ public class UnsupportedDataException extends RuntimeException {
     public UnsupportedDataException(String s, Throwable throwable) {
         super(s, throwable);
     }
+    
+    public UnsupportedDataException(String s, Throwable throwable, Object data) {
+        super(s, throwable);
+        _data = data;
+    }
+    
+    public Object getData() {
+    	return _data;
+    }
+    
+
 }

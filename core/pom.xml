@@ -114,6 +114,13 @@
     </build>
 
     <dependencies>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.0.1</version>
+		</dependency>
+
         <dependency>
             <groupId>org.seamless</groupId>
             <artifactId>seamless-util</artifactId>
@@ -129,26 +136,48 @@
             <artifactId>seamless-xml</artifactId>
             <version>${seamless.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpcore</artifactId>
-            <version>${apache.httpcomponents.version}</version>
-            <scope>compile</scope>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>${apache.httpcomponents.version}</version>
-            <scope>compile</scope>
-            <optional>true</optional>
-        </dependency>
+<!--         <dependency> -->
+<!--             <groupId>org.apache.httpcomponents</groupId> -->
+<!--             <artifactId>httpcore</artifactId> -->
+<!--             <version>${apache.httpcomponents.version}</version> -->
+<!--             <scope>compile</scope> -->
+<!--             <optional>true</optional> -->
+<!--         </dependency> -->
+<!--         <dependency> -->
+<!--             <groupId>org.apache.httpcomponents</groupId> -->
+<!--             <artifactId>httpclient</artifactId> -->
+<!--             <version>${apache.httpcomponents.version}</version> -->
+<!--             <scope>compile</scope> -->
+<!--             <optional>true</optional> -->
+<!--         </dependency> -->
+    	<dependency>
+			<groupId>com.bubblesoft.org.apache.httpcomponents</groupId>
+			<artifactId>httpclient-repackaged</artifactId>
+			<version>4.1.1</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.bubblesoft.org.apache.httpcomponents</groupId>
+			<artifactId>httpcore-repackaged</artifactId>
+			<version>4.1.1</version>
+		</dependency>
+
         <dependency>
             <groupId>com.google.android</groupId>
             <artifactId>android</artifactId>
             <version>${android.version}</version>
             <scope>compile</scope>
             <optional>true</optional>
+            <exclusions>
+            	<exclusion>
+            		<artifactId>httpcore</artifactId>
+            		<groupId>org.apache.httpcomponents</groupId>
+            	</exclusion>
+            	<exclusion>
+            		<artifactId>httpclient</artifactId>
+            		<groupId>org.apache.httpcomponents</groupId>
+            	</exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>javax.enterprise</groupId>

@@ -74,7 +74,7 @@ public class DefaultServiceManager<T> implements ServiceManager<T> {
     protected void lock() {
         try {
             if (lock.tryLock(getLockTimeoutMillis(), TimeUnit.MILLISECONDS)) {
-                log.fine("Acquired lock");
+                //log.fine("Acquired lock");
             } else {
                 throw new RuntimeException("Failed to acquire lock in milliseconds: " + getLockTimeoutMillis());
             }
@@ -84,7 +84,7 @@ public class DefaultServiceManager<T> implements ServiceManager<T> {
     }
 
     protected void unlock() {
-        log.fine("Releasing lock");
+        //log.fine("Releasing lock");
         lock.unlock();
     }
 
@@ -239,6 +239,7 @@ public class DefaultServiceManager<T> implements ServiceManager<T> {
             } catch (Exception ex) {
                 // TODO: Is it OK to only log this error? It means we keep running although we couldn't send events?
                 log.severe("Error reading state of service after state variable update event: " + Exceptions.unwrap(ex));
+                ex.printStackTrace();
             }
         }
     }

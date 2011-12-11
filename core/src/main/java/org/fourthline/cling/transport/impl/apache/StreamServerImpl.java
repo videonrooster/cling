@@ -17,16 +17,6 @@
 
 package org.fourthline.cling.transport.impl.apache;
 
-import org.apache.http.HttpRequestFactory;
-import org.apache.http.impl.DefaultHttpServerConnection;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.CoreConnectionPNames;
-import org.apache.http.params.HttpParams;
-import org.fourthline.cling.transport.Router;
-import org.fourthline.cling.transport.spi.InitializationException;
-import org.fourthline.cling.transport.spi.StreamServer;
-import org.fourthline.cling.transport.spi.UpnpStream;
-
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.InetAddress;
@@ -34,6 +24,17 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.logging.Logger;
+
+import org.fourthline.cling.transport.Router;
+import org.fourthline.cling.transport.spi.InitializationException;
+import org.fourthline.cling.transport.spi.StreamServer;
+import org.fourthline.cling.transport.spi.UpnpStream;
+
+import com.bubblesoft.org.apache.http.HttpRequestFactory;
+import com.bubblesoft.org.apache.http.impl.DefaultHttpServerConnection;
+import com.bubblesoft.org.apache.http.params.BasicHttpParams;
+import com.bubblesoft.org.apache.http.params.CoreConnectionPNames;
+import com.bubblesoft.org.apache.http.params.HttpParams;
 
 /**
  * Implementation based on <a href="http://hc.apache.org/">Apache HTTP Components</a>.

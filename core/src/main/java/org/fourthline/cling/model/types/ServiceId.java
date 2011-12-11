@@ -17,10 +17,11 @@
 
 package org.fourthline.cling.model.types;
 
-import org.fourthline.cling.model.Constants;
-
-import java.util.regex.Pattern;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.fourthline.cling.model.Constants;
 
 /**
  * Represents a service identifer, for example <code>urn:my-domain-namespace:serviceId:MyService123</code>
@@ -28,6 +29,8 @@ import java.util.regex.Matcher;
  * @author Christian Bauer
  */
 public class ServiceId {
+
+    final private static Logger log = Logger.getLogger(ServiceId.class.getName());
 
     public static final Pattern PATTERN =
             Pattern.compile("urn:(" + Constants.REGEX_NAMESPACE + "):serviceId:(" + Constants.REGEX_ID+ ")");
@@ -72,7 +75,14 @@ public class ServiceId {
             if (matcher.matches()) {
                 return new ServiceId(matcher.group(1), matcher.group(2));
             } else {
+            	// BBMOD: hack for ps audio
+
+            	String tokens[] = s.split("[:]");
+            	if(tokens.length != 4) {
                 throw new InvalidValueException("Can't parse Service ID string (namespace/id): " + s);
+            }
+            	log.warning("Invalid service ID, but still tokenizable ");
+                return new ServiceId(tokens[1], tokens[3]);
             }
         }
         return serviceId;

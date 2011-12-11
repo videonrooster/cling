@@ -17,12 +17,24 @@
 
 package org.fourthline.cling.mock;
 
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.Executor;
+
+import javax.enterprise.inject.Alternative;
+
 import org.fourthline.cling.DefaultUpnpServiceConfiguration;
 import org.fourthline.cling.UpnpService;
 import org.fourthline.cling.UpnpServiceConfiguration;
 import org.fourthline.cling.controlpoint.ControlPoint;
 import org.fourthline.cling.controlpoint.ControlPointImpl;
 import org.fourthline.cling.model.NetworkAddress;
+import org.fourthline.cling.model.action.ActionInvocation;
 import org.fourthline.cling.model.message.IncomingDatagramMessage;
 import org.fourthline.cling.model.message.OutgoingDatagramMessage;
 import org.fourthline.cling.model.message.StreamRequestMessage;
@@ -38,19 +50,13 @@ import org.fourthline.cling.registry.RegistryImpl;
 import org.fourthline.cling.registry.RegistryMaintainer;
 import org.fourthline.cling.transport.Router;
 import org.fourthline.cling.transport.impl.NetworkAddressFactoryImpl;
+import org.fourthline.cling.transport.impl.RecoverGENAEventProcessor;
+import org.fourthline.cling.transport.impl.RecoverSOAPActionProcessor;
+import org.fourthline.cling.transport.spi.GENAEventProcessor;
 import org.fourthline.cling.transport.spi.NetworkAddressFactory;
+import org.fourthline.cling.transport.spi.SOAPActionProcessor;
 import org.fourthline.cling.transport.spi.StreamClient;
 import org.fourthline.cling.transport.spi.UpnpStream;
-
-import javax.enterprise.inject.Alternative;
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.Executor;
 
 /**
  * Simplifies testing of core and non-core modules.
@@ -142,6 +148,21 @@ public class MockUpnpService implements UpnpService {
                             }
                         };
             }
+            
+            @Override
+        	protected SOAPActionProcessor createSOAPActionProcessor() {
+        		return new RecoverSOAPActionProcessor() {
+        			@Override
+        			protected void onInvalidSOAP(ActionInvocation actionInvocation, String xml, Exception e) {
+        		    }
+        		};
+        	}
+            
+            @Override
+        	protected GENAEventProcessor createGENAEventProcessor() {
+        		return new RecoverGENAEventProcessor();
+        	}
+
         };
 
         this.protocolFactory = createProtocolFactory(this, sendsAlive);

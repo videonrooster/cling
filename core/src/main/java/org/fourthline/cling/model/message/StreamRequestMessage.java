@@ -73,4 +73,8 @@ public class StreamRequestMessage extends UpnpMessage<UpnpRequest> {
         return getOperation().getURI();
     }
     
+    public void setUri(URI uri) {
+        getOperation().setUri(uri);
+    }
+    
 }

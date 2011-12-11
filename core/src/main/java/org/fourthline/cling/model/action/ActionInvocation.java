@@ -33,7 +33,7 @@ import java.util.Map;
  */
 public class ActionInvocation<S extends Service> {
 
-    final protected Action<S> action;
+    protected Action<S> action;
 
     // We don't necessarily have to preserve insertion order but it's nicer if the arrays returned
     // by the getters are reliable
@@ -42,6 +42,12 @@ public class ActionInvocation<S extends Service> {
 
     protected ActionException failure = null;
 
+	private String userAgent;
+	private String remoteAddr;
+
+    public ActionInvocation() {
+    }
+    
     public ActionInvocation(Action<S> action) {
         this(action, null, null);
     }
@@ -67,8 +73,17 @@ public class ActionInvocation<S extends Service> {
         this.failure = failure;
     }
 
+    public ActionInvocation(Action<S> action, String userAgent) {
+    	this(action);
+    	this.userAgent = userAgent;
+	}
+
     public Action<S> getAction() {
         return action;
+    }
+
+    public void setAction(Action<S> action) {
+    	this.action = action;
     }
 
     public ActionArgumentValue<S>[] getInput() {
@@ -161,4 +176,16 @@ public class ActionInvocation<S extends Service> {
     public String toString() {
         return "(" + getClass().getSimpleName() + ") " + getAction();
     }
+
+	public String getUserAgent() {
+		return userAgent;
+	}
+	
+	public String getRemoteAddr() {
+		return remoteAddr;
+	}
+
+	public void setRemoteAddr(String remoteAddr) {
+		this.remoteAddr = remoteAddr;
+	}
 }

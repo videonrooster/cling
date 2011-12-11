@@ -228,12 +228,22 @@ public abstract class SubscriptionCallback implements Runnable {
                             SubscriptionCallback.this.eventsMissed(this, numberOfMissedEvents);
                         }
                     }
+
+					@Override
+					public void invalidXMLException(String xml, Exception e) {
+						synchronized (SubscriptionCallback.this) {
+							SubscriptionCallback.this.invalidXMLException(this, xml, e);
+						}
+					}
                 };
 
         getControlPoint().getProtocolFactory()
                 . createSendingSubscribe(remoteSubscription)
                 .run();
     }
+
+
+	protected abstract void invalidXMLException(RemoteGENASubscription remoteGENASubscription, String xml, Exception e);
 
     synchronized public void end() {
         if (subscription == null) return;

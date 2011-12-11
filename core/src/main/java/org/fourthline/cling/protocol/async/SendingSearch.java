@@ -101,7 +101,7 @@ public class SendingSearch extends SendingAsync {
     }
 
     public int getBulkRepeat() {
-        return 2; // UDA 1.0 says "repeat more than once", so we do it twice
+        return 10; // UDA 1.0 says "repeat more than once", so we do it twice
     }
 
     public int getBulkIntervalMilliseconds() {

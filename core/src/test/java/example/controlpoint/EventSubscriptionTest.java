@@ -6,6 +6,7 @@ import org.fourthline.cling.controlpoint.SubscriptionCallback;
 import org.fourthline.cling.mock.MockUpnpService;
 import org.fourthline.cling.model.gena.CancelReason;
 import org.fourthline.cling.model.gena.GENASubscription;
+import org.fourthline.cling.model.gena.RemoteGENASubscription;
 import org.fourthline.cling.model.message.StreamResponseMessage;
 import org.fourthline.cling.model.message.UpnpResponse;
 import org.fourthline.cling.model.message.header.SubscriptionIdHeader;
@@ -136,6 +137,14 @@ public class EventSubscriptionTest {
                 System.out.println("Missed events: " + numberOfMissedEvents);
                 testAssertions.add(false);                                                  // DOC: EXC5
             }
+
+			@Override
+			protected void invalidXMLException(
+					RemoteGENASubscription remoteGENASubscription, String xml,
+					Exception e) {
+				// TODO Auto-generated method stub
+				
+			}
 
         };
 

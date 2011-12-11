@@ -17,6 +17,9 @@
 
 package org.fourthline.cling.protocol.sync;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.fourthline.cling.UpnpService;
 import org.fourthline.cling.model.action.ActionException;
 import org.fourthline.cling.model.action.ActionInvocation;
@@ -28,14 +31,12 @@ import org.fourthline.cling.model.message.control.IncomingActionRequestMessage;
 import org.fourthline.cling.model.message.control.OutgoingActionResponseMessage;
 import org.fourthline.cling.model.message.header.ContentTypeHeader;
 import org.fourthline.cling.model.message.header.UpnpHeader;
+import org.fourthline.cling.model.message.header.UserAgentHeader;
 import org.fourthline.cling.model.resource.ServiceControlResource;
 import org.fourthline.cling.model.types.ErrorCode;
 import org.fourthline.cling.protocol.ReceivingSync;
 import org.fourthline.cling.transport.spi.UnsupportedDataException;
 import org.seamless.util.Exceptions;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Handles reception of control messages, invoking actions on local services.
@@ -115,8 +116,14 @@ public class ReceivingAction extends ReceivingSync<StreamRequestMessage, StreamR
             requestThreadLocal.set(requestMessage);
             extraResponseHeadersThreadLocal.set(new UpnpHeaders());
 
+            String userAgent = null;
+            UserAgentHeader header = getInputMessage().getHeaders().getFirstHeader(UpnpHeader.Type.USER_AGENT, UserAgentHeader.class);
+            if(header != null) {
+            	userAgent = header.getValue();
+            }
+
             log.finer("Created incoming action request message: " + requestMessage);
-            invocation = new ActionInvocation(requestMessage.getAction());
+            invocation = new ActionInvocation(requestMessage.getAction(), userAgent);
 
             // Throws UnsupportedDataException if the body can't be read
             log.fine("Reading body of request message");
@@ -141,9 +148,7 @@ public class ReceivingAction extends ReceivingSync<StreamRequestMessage, StreamR
             responseMessage = new OutgoingActionResponseMessage(UpnpResponse.Status.INTERNAL_SERVER_ERROR);
 
         } catch (UnsupportedDataException ex) {
-            if (log.isLoggable(Level.FINER)) {
-                log.log(Level.FINER, "Error reading action request XML body: " + ex.toString(), Exceptions.unwrap(ex));
-            }
+        	log.log(Level.WARNING, "Error reading action request XML body: " + ex.toString(), Exceptions.unwrap(ex));
 
             invocation =
                     new ActionInvocation(

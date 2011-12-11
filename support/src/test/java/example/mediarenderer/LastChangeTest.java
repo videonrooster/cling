@@ -4,6 +4,7 @@ import org.fourthline.cling.controlpoint.SubscriptionCallback;
 import org.fourthline.cling.mock.MockUpnpService;
 import org.fourthline.cling.model.gena.CancelReason;
 import org.fourthline.cling.model.gena.GENASubscription;
+import org.fourthline.cling.model.gena.RemoteGENASubscription;
 import org.fourthline.cling.model.message.UpnpResponse;
 import org.fourthline.cling.model.meta.LocalDevice;
 import org.fourthline.cling.model.meta.LocalService;
@@ -195,6 +196,14 @@ public class LastChangeTest {
             public void eventsMissed(GENASubscription sub, int numberOfMissedEvents) {
             }
 
+			@Override
+			protected void invalidXMLException(
+					RemoteGENASubscription remoteGENASubscription, String xml,
+					Exception e) {
+				// TODO Auto-generated method stub
+				
+			}
+
         };
 
         upnpService.getControlPoint().execute(callback);
@@ -266,6 +275,14 @@ public class LastChangeTest {
 
             public void eventsMissed(GENASubscription sub, int numberOfMissedEvents) {
             }
+
+			@Override
+			protected void invalidXMLException(
+					RemoteGENASubscription remoteGENASubscription, String xml,
+					Exception e) {
+				// TODO Auto-generated method stub
+				
+			}
 
         };
 

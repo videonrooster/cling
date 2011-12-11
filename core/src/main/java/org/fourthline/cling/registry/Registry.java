@@ -347,6 +347,15 @@ public interface Registry {
      */
     public <T extends Resource> Collection<T> getResources(Class<T> resourceType);
 
+    /**
+     * Enable/Disable advertising of a local device on the LAN
+     * 
+     * @param localDevice The local device to operate
+     * @param advertising true to enable advertising, false otherwise
+	 */
+    public void setLocalDeviceAdvertising(LocalDevice localDevice, boolean advertising);
+
+
     // #################################################################################################
 
     /**

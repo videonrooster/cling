@@ -118,6 +118,14 @@ public class OutgoingSubscriptionFailureTest {
                 testAssertions.add(false);
             }
 
+			@Override
+			protected void invalidXMLException(
+					RemoteGENASubscription remoteGENASubscription, String xml,
+					Exception e) {
+				// TODO Auto-generated method stub
+				
+			}
+
         };
 
         upnpService.getControlPoint().execute(callback);
@@ -183,6 +191,14 @@ public class OutgoingSubscriptionFailureTest {
                 assertEquals(numberOfMissedEvents, 2);
                 testAssertions.add(true);
             }
+
+			@Override
+			protected void invalidXMLException(
+					RemoteGENASubscription remoteGENASubscription, String xml,
+					Exception e) {
+				// TODO Auto-generated method stub
+				
+			}
 
         };
 

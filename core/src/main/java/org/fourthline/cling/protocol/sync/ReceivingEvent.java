@@ -96,8 +96,23 @@ public class ReceivingEvent extends ReceivingSync<StreamRequestMessage, Outgoing
 
             getUpnpService().getConfiguration().getGenaEventProcessor().readBody(requestMessage);
 
-        } catch (UnsupportedDataException ex) {
+		} catch (final UnsupportedDataException ex) {
             log.fine("Can't read request body, " + ex);
+
+			final RemoteGENASubscription subscription =
+					getUpnpService().getRegistry().getRemoteSubscription(requestMessage.getSubscrptionId());
+			if(subscription != null) {
+
+				getUpnpService().getConfiguration().getRegistryListenerExecutor().execute(
+						new Runnable() {
+							public void run() {
+								log.fine("Calling active subscription with event state variable values");
+								subscription.invalidXMLException((String)ex.getData(), (Exception)ex.getCause());
+							}
+						}
+						);
+			}
+
             return new OutgoingEventResponseMessage(new UpnpResponse(UpnpResponse.Status.INTERNAL_SERVER_ERROR));
         }
 
