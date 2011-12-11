@@ -47,6 +47,13 @@
 
     <dependencies>
 
+		<dependency>
+			<groupId>com.bubblesoft</groupId>
+			<artifactId>bubble-common</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+
+
         <dependency>
             <groupId>org.fourthline.cling</groupId>
             <artifactId>cling-core</artifactId>

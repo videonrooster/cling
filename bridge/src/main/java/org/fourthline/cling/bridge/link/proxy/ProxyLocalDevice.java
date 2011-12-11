@@ -17,6 +17,9 @@
 
 package org.fourthline.cling.bridge.link.proxy;
 
+import java.util.List;
+
+import org.fourthline.cling.bridge.link.Endpoint;
 import org.fourthline.cling.model.ValidationException;
 import org.fourthline.cling.model.meta.DeviceDetails;
 import org.fourthline.cling.model.meta.Icon;
@@ -26,13 +29,15 @@ import org.fourthline.cling.model.meta.UDAVersion;
 import org.fourthline.cling.model.types.DeviceType;
 import org.fourthline.cling.model.types.UDN;
 
-import java.util.List;
-
 /**
  * @author Christian Bauer
  */
 public class ProxyLocalDevice extends LocalDevice {
 
+	// for bridged remote devices
+	UDN _bridgedUdn;
+	Endpoint _endpoint;
+	
     public ProxyLocalDevice(ProxyDeviceIdentity identity) throws ValidationException {
         super(identity);
     }
@@ -60,4 +65,22 @@ public class ProxyLocalDevice extends LocalDevice {
         );
     }
 
+    public UDN getBridgedUdn() {
+    	return _bridgedUdn;
 }
+    
+    public void setBridgedUdn(UDN udn) {
+    	_bridgedUdn = udn;
+    }
+    
+    public void setEndpoint(Endpoint endpoint) {
+    	_endpoint = endpoint;
+	}
+    
+    public Endpoint getEndpoint() {
+    	return _endpoint;
+    }
+
+}
+
+	

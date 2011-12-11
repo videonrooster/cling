@@ -17,22 +17,30 @@
 
 package org.fourthline.cling.bridge;
 
+import java.net.InetAddress;
+import java.net.URL;
+import java.util.List;
+import java.util.logging.Logger;
+
 import org.fourthline.cling.DefaultUpnpServiceConfiguration;
-import org.fourthline.cling.bridge.auth.AuthManager;
-import org.fourthline.cling.bridge.auth.SecureHashAuthManager;
 import org.fourthline.cling.bridge.gateway.FormActionProcessor;
 import org.fourthline.cling.bridge.link.proxy.CombinedDescriptorBinder;
+import org.fourthline.cling.model.meta.Device;
+import org.fourthline.cling.model.types.DeviceType;
 import org.fourthline.cling.transport.Router;
+import org.fourthline.cling.transport.impl.apache.StreamClientConfigurationImpl;
 import org.fourthline.cling.transport.spi.InitializationException;
 import org.fourthline.cling.transport.spi.NetworkAddressFactory;
 import org.fourthline.cling.transport.spi.StreamServer;
 import org.fourthline.cling.transport.spi.StreamServerConfiguration;
-import org.seamless.util.URIUtil;
 
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.URL;
-import java.util.logging.Logger;
+import com.bubblesoft.org.apache.http.client.HttpClient;
+import com.bubblesoft.org.apache.http.impl.client.ContentEncodingHttpClient;
+import com.bubblesoft.org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import com.bubblesoft.org.apache.http.params.BasicHttpParams;
+import com.bubblesoft.org.apache.http.params.HttpConnectionParams;
+import com.bubblesoft.org.apache.http.params.HttpParams;
+import com.bubblesoft.org.apache.http.params.HttpProtocolParams;
 
 /**
  * @author Christian Bauer
@@ -45,21 +53,55 @@ public class BridgeUpnpServiceConfiguration extends DefaultUpnpServiceConfigurat
     final private String contextPath;
     final private CombinedDescriptorBinder combinedDescriptorBinder;
     final private FormActionProcessor actionProcessor;
-    final private AuthManager authManager;
+    private HttpClient httpClient;
 
-    public BridgeUpnpServiceConfiguration(URL localBaseURL) {
-        this(localBaseURL, "");
+    // client constructor
+    public BridgeUpnpServiceConfiguration(HttpClient httpClient) {
+        this(null, "", httpClient);
     }
 
-    public BridgeUpnpServiceConfiguration(URL localBaseURL, String contextPath) {
-        super(localBaseURL.getPort(), false);
+    public BridgeUpnpServiceConfiguration(URL localBaseURL, HttpClient httpClient) {
+        this(localBaseURL, "", httpClient);
+    }
+
+    public BridgeUpnpServiceConfiguration(URL localBaseURL, String contextPath, HttpClient httpClient) {
+        super(localBaseURL == null ? 0 : localBaseURL.getPort(), false);
         this.localBaseURL = localBaseURL;
         this.contextPath = contextPath;
         this.actionProcessor = createFormActionProcessor();
         this.combinedDescriptorBinder = createCombinedDescriptorBinder();
-        this.authManager = createAuthManager();
 
-        log.info("Bridge configured with local URL: " + getLocalEndpointURLWithCredentials());
+        if(httpClient == null) {
+        	StreamClientConfigurationImpl streamConfiguration = new StreamClientConfigurationImpl() {
+        		public int getConnectionTimeoutSeconds() {
+    				return 5;
+    			}
+    			public int getDataReadTimeoutSeconds() {
+    				return 20;
+    			}
+        	};
+        	
+        	HttpParams params = new BasicHttpParams();
+        	
+            HttpConnectionParams.setConnectionTimeout(params, streamConfiguration.getConnectionTimeoutSeconds() * 1000);
+            HttpConnectionParams.setSoTimeout(params, streamConfiguration.getDataReadTimeoutSeconds() * 1000);
+            HttpProtocolParams.setContentCharset(params, streamConfiguration.getContentCharset());
+            HttpProtocolParams.setUseExpectContinue(params, false);
+            
+        	
+        	ThreadSafeClientConnManager clientConnectionManager = new ThreadSafeClientConnManager();
+        	clientConnectionManager.setMaxTotal(streamConfiguration.getMaxTotalConnections());
+            clientConnectionManager.setDefaultMaxPerRoute(100);
+        	
+        	httpClient = new ContentEncodingHttpClient(clientConnectionManager, params);
+
+        }
+        
+        this.httpClient = httpClient;
+    }
+    
+    public HttpClient getHttpClient() {
+    	return httpClient;
     }
 
     public URL getLocalBaseURL() {
@@ -78,10 +120,6 @@ public class BridgeUpnpServiceConfiguration extends DefaultUpnpServiceConfigurat
         return actionProcessor;
     }
 
-    public AuthManager getAuthManager() {
-        return authManager;
-    }
-
     protected CombinedDescriptorBinder createCombinedDescriptorBinder() {
         return new CombinedDescriptorBinder(this);
     }
@@ -90,11 +128,8 @@ public class BridgeUpnpServiceConfiguration extends DefaultUpnpServiceConfigurat
         return new FormActionProcessor();
     }
 
-    protected AuthManager createAuthManager() {
-        return new SecureHashAuthManager();
-    }
-
     public URL getLocalEndpointURL() {
+    	if(localBaseURL == null) return null;
         try {
             return new URL(
                     getLocalBaseURL().getProtocol(),
@@ -107,13 +142,6 @@ public class BridgeUpnpServiceConfiguration extends DefaultUpnpServiceConfigurat
         }
     }
 
-    public URL getLocalEndpointURLWithCredentials() {
-        StringBuilder url = new StringBuilder();
-        url.append(getLocalEndpointURL().toString()).append("/");
-        url.append("?").append(SecureHashAuthManager.QUERY_PARAM_AUTH);
-        url.append("=").append(getAuthManager().getLocalCredentials());
-        return URIUtil.toURL(URI.create(url.toString()));
-    }
 
     // TODO: Make the network interfaces/IPs for binding configurable with servlet context params
 
@@ -145,4 +173,12 @@ public class BridgeUpnpServiceConfiguration extends DefaultUpnpServiceConfigurat
             }
         };
     }
+
+	public List<DeviceType> getAuthorizedDeviceTypes() {
+		return null;
+	}
+
+	public boolean isBridgedDevice(Device device) {
+		return true;
+	}
 }

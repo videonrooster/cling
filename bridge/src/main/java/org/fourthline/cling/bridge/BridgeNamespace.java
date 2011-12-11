@@ -32,7 +32,7 @@ public class BridgeNamespace extends Namespace {
     public static final String PROXY_SEGMENT = "/proxy";
 
     public BridgeNamespace() {
-        this("");
+        this("/res");
     }
 
     public BridgeNamespace(String contextPath) {
@@ -50,6 +50,14 @@ public class BridgeNamespace extends Namespace {
                 getEndpointPath(endpointId)
                         + PROXY_SEGMENT
                         + "/" + URIUtil.encodePathSegment(device.getIdentity().getUdn().getIdentifierString())
+        );
+    }
+    
+    public URI getProxyPath(String endpointId, String udn) {
+        return URI.create(
+                getEndpointPath(endpointId)
+                        + PROXY_SEGMENT
+                        + "/" + URIUtil.encodePathSegment(udn)
         );
     }
 

@@ -54,24 +54,6 @@ public abstract class EndpointResource extends Resource<Endpoint> {
     }
 
     @Override
-    synchronized public void maintain(List<Runnable> pendingExecutions, final ExpirationDetails expirationDetails) {
-        if (expirationDetails.hasExpired(true)) {
-
-            // Link was initiated on this side, maintain it
-            if (getModel().isLocalOrigin()) {
-                pendingExecutions.add(new Runnable() {
-                    public void run() {
-                        log.fine("Endpoint with this origin is almost expired, updating link: " + getModel());
-                        getLinkManager().registerAndPut(EndpointResource.this, expirationDetails.getMaxAgeSeconds());
-                    }
-                });
-            }
-
-            // Link wasn't initiated on this side, remove it
-        }
-    }
-
-    @Override
     synchronized public void shutdown() {
         getLinkManager().deregisterAndDelete(this);
     }

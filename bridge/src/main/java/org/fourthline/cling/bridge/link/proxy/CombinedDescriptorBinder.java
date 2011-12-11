@@ -93,7 +93,7 @@ public class CombinedDescriptorBinder {
         return configuration;
     }
 
-    public String write(Device device) throws IOException {
+    synchronized public String write(Device device) throws IOException {
         try {
             log.fine("Generating serialized XML of device graph: " + device);
 
@@ -156,7 +156,8 @@ public class CombinedDescriptorBinder {
         }
     }
 
-    public ProxyLocalDevice read(String xml, Endpoint endpoint) throws IOException {
+
+    synchronized  public ProxyLocalDevice read(String xml, Endpoint endpoint) throws IOException {
 
         if (xml == null || xml.length() == 0) {
             throw new IOException("Null or empty XML");
@@ -217,7 +218,8 @@ public class CombinedDescriptorBinder {
 
                     String iconId = ((Element) deviceModelChild).getAttribute(ATTR.iconId.toString());
 
-                    icons.put(iconId, Base64Coder.decode(deviceModelChild.getTextContent()));
+                    icons.put(iconId, Base64Coder.decode(XMLUtil.getTextContent(deviceModelChild)));
+                    
                 }
 
                 if (EL.deviceService.toString().equals(deviceModelChild.getNodeName())) {
@@ -261,6 +263,8 @@ public class CombinedDescriptorBinder {
             }
             throw new IOException("Could not parse combined descriptor: " + ex.toString(), ex);
         } catch (Exception ex) {
+        	//ex.printStackTrace();
+        	log.severe(xml);
             throw new IOException("Could not parse combined descriptor: " + ex.toString(), ex);
         }
     }

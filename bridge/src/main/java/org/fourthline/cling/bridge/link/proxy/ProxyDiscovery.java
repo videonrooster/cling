@@ -17,35 +17,33 @@
 
 package org.fourthline.cling.bridge.link.proxy;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
-import org.fourthline.cling.bridge.BridgeNamespace;
-import org.fourthline.cling.bridge.BridgeUpnpService;
-import org.fourthline.cling.bridge.auth.AuthCredentials;
-import org.fourthline.cling.bridge.auth.AuthManager;
-import org.fourthline.cling.bridge.link.Endpoint;
-import org.fourthline.cling.bridge.link.EndpointResource;
-import org.fourthline.cling.model.ValidationError;
-import org.fourthline.cling.model.ValidationException;
-import org.fourthline.cling.model.meta.Action;
-import org.fourthline.cling.model.meta.Device;
-import org.fourthline.cling.model.meta.Icon;
-import org.fourthline.cling.model.meta.LocalDevice;
-import org.fourthline.cling.model.meta.RemoteDevice;
-import org.fourthline.cling.model.meta.RemoteService;
-import org.fourthline.cling.model.meta.StateVariable;
-import org.fourthline.cling.registry.DefaultRegistryListener;
-import org.fourthline.cling.registry.Registry;
-import org.seamless.util.Exceptions;
-import org.seamless.util.MimeType;
-
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+
+import javax.ws.rs.core.Response;
+
+import org.fourthline.cling.bridge.BridgeNamespace;
+import org.fourthline.cling.bridge.BridgeUpnpService;
+import org.fourthline.cling.model.ValidationError;
+import org.fourthline.cling.model.ValidationException;
+import org.fourthline.cling.model.meta.Action;
+import org.fourthline.cling.model.meta.Device;
+import org.fourthline.cling.model.meta.DeviceDetails;
+import org.fourthline.cling.model.meta.Icon;
+import org.fourthline.cling.model.meta.LocalDevice;
+import org.fourthline.cling.model.meta.RemoteDevice;
+import org.fourthline.cling.model.meta.RemoteService;
+import org.fourthline.cling.model.meta.StateVariable;
+import org.fourthline.cling.model.types.UDN;
+import org.fourthline.cling.registry.DefaultRegistryListener;
+import org.fourthline.cling.registry.Registry;
+import org.jboss.resteasy.client.ClientRequest;
+import org.jboss.resteasy.client.ClientResponse;
+import org.seamless.util.Exceptions;
+import org.seamless.util.MimeType;
 
 /**
  * @author Christian Bauer
@@ -64,20 +62,25 @@ public class ProxyDiscovery extends DefaultRegistryListener {
         return upnpService;
     }
 
-    public AuthManager getAuthManager() {
-        return getUpnpService().getConfiguration().getAuthManager();
-    }
 
     @Override
     public void remoteDeviceAdded(Registry registry, RemoteDevice device) {
+    	// FIXME: handle this when we do C2DM
+    	/*
         for (EndpointResource resource : registry.getResources(EndpointResource.class)) {
             log.fine("Remote device added, sending to endpoint: " + resource.getModel());
             putRemoteDevice(resource.getModel(), device);
         }
+        */
+    	
+    	
+    	
     }
 
     @Override
     public void localDeviceAdded(Registry registry, LocalDevice device) {
+    	// FIXME: handle this when we do C2DM
+    	/*
         if (device instanceof ProxyLocalDevice) {
             log.fine("Proxy added, not announcing to any endpoints: " + device);
             return;
@@ -86,10 +89,13 @@ public class ProxyDiscovery extends DefaultRegistryListener {
             log.fine("Local device added, sending to endpoint: " + resource.getModel());
             putLocalDevice(resource.getModel(), device);
         }
+        */
     }
 
     @Override
     public void deviceRemoved(Registry registry, Device device) {
+    	// FIXME: handle this when we do C2DM
+    	/*
         if (device instanceof ProxyLocalDevice) {
             log.fine("Proxy removed, not announcing to any endpoints: " + device);
             return;
@@ -98,8 +104,52 @@ public class ProxyDiscovery extends DefaultRegistryListener {
             log.fine("Device removed, removing from endpoint: " + resource.getModel());
             deleteDevice(resource.getModel(), device);
         }
+        */
+    }
+    
+    
+    public String getProxyDeviceDescriptor(String udn) {
+    	return getProxyDeviceDescriptor(udn, null);
+    }
+    
+    // BBMOD
+    public String getProxyDeviceDescriptor(String udn,  String friendlyNameSuffix) {
+    	
+    	UDN Udn = new UDN(udn);
+    	
+    	Device device = getUpnpService().getRegistry().getDevice(Udn, true);
+    	
+    	if(device instanceof LocalDevice) {
+    		log.warning("not managing LocalDevice");
+    		return null; // FIXME
+    	} else if(device instanceof RemoteDevice) {
+    	    RemoteDevice preparedDevice;
+            try {
+                // Rewrite the URIs of all services to URIs reachable through the HTTP gateway, etc.
+                log.fine("Preparing remote device for proxying with a modified copy of the device metamodel graph");
+                preparedDevice = prepareRemoteDevice((RemoteDevice)device, friendlyNameSuffix);
+            } catch (ValidationException ex) {
+                // This should never happen, the graph was already OK and our transformation is bug-free
+                log.warning("Could not validate transformed device model: " + device);
+                for (ValidationError validationError : ex.getErrors()) {
+                    log.warning(validationError.toString());
+                }
+                return null;
+            }
+            
+            try {
+                return getUpnpService().getConfiguration().getCombinedDescriptorBinder().write(preparedDevice);
+            } catch (IOException ex) {
+                log.warning("Could not create combined descriptor: " + Exceptions.unwrap(ex));
+            }
+            
+    	} else {
+    		log.warning("device not found: " + udn);
+    	}
+    	return null;
     }
 
+    /*
     public void putCurrentDevices(Endpoint endpoint) {
         log.fine("Sending current devices to: " + endpoint);
         
@@ -129,6 +179,7 @@ public class ProxyDiscovery extends DefaultRegistryListener {
         }
     }
 
+    
     public boolean putRemoteDevice(Endpoint endpoint, RemoteDevice device) {
 
         RemoteDevice preparedDevice;
@@ -147,7 +198,6 @@ public class ProxyDiscovery extends DefaultRegistryListener {
 
         return putProxy(
                 getRemoteProxyURL(endpoint, device),
-                endpoint.getCredentials(),
                 preparedDevice
         );
     }
@@ -155,12 +205,12 @@ public class ProxyDiscovery extends DefaultRegistryListener {
     public boolean putLocalDevice(final Endpoint endpoint, LocalDevice device) {
         return putProxy(
                 getRemoteProxyURL(endpoint, device),
-                endpoint.getCredentials(),
                 device
         );
     }
 
-    protected boolean putProxy(String remoteURL, AuthCredentials credentials, Device device) {
+
+    protected boolean putProxy(String remoteURL, Device device) {
         String descriptor;
         try {
             descriptor = getUpnpService().getConfiguration().getCombinedDescriptorBinder().write(device);
@@ -174,7 +224,7 @@ public class ProxyDiscovery extends DefaultRegistryListener {
             log.info("Sending device proxy to: " + remoteURL);
             ClientRequest request = new ClientRequest(remoteURL);
             request.body(MediaType.TEXT_XML, descriptor);
-            getAuthManager().write(credentials, request);
+            //getAuthManager().write(credentials, request);
             Response response = request.put();
 
             if (response.getStatus() != Response.Status.OK.getStatusCode()) {
@@ -189,20 +239,21 @@ public class ProxyDiscovery extends DefaultRegistryListener {
         return !failed;
     }
 
+    /*
     public boolean deleteDevice(Endpoint endpoint, Device device) {
         return deleteProxy(
-                getRemoteProxyURL(endpoint, device),
-                endpoint.getCredentials(),
+                //getRemoteProxyURL(endpoint, device),
                 device
         );
     }
 
-    protected boolean deleteProxy(String remoteURL, AuthCredentials credentials, Device device) {
+    
+    protected boolean deleteProxy(Device device) {
         boolean failed = false;
         try {
             log.info("Sending deletion of device proxy: " + remoteURL);
             ClientRequest request = new ClientRequest(remoteURL);
-            getAuthManager().write(credentials, request);
+            //getAuthManager().write(credentials, request);
             Response response = request.delete();
 
             if (response.getStatus() != Response.Status.OK.getStatusCode()) {
@@ -218,8 +269,9 @@ public class ProxyDiscovery extends DefaultRegistryListener {
         }
         return !failed;
     }
+    */
 
-    protected RemoteDevice prepareRemoteDevice(RemoteDevice currentDevice) throws ValidationException {
+    protected RemoteDevice prepareRemoteDevice(RemoteDevice currentDevice, String friendlyNameSuffix) throws ValidationException {
 
         List<RemoteService> services = new ArrayList();
         if (currentDevice.hasServices()) {
@@ -231,7 +283,7 @@ public class ProxyDiscovery extends DefaultRegistryListener {
         List<RemoteDevice> embeddedDevices = new ArrayList();
         if (currentDevice.hasEmbeddedDevices()) {
             for (RemoteDevice embeddedDevice : currentDevice.getEmbeddedDevices()) {
-                embeddedDevices.add(prepareRemoteDevice(embeddedDevice));
+                embeddedDevices.add(prepareRemoteDevice(embeddedDevice, friendlyNameSuffix));
             }
         }
 
@@ -259,11 +311,36 @@ public class ProxyDiscovery extends DefaultRegistryListener {
             }
         }
 
+        UDN newUDN = UDN.uniqueSystemIdentifier(currentDevice.getIdentity().getUdn().getIdentifierString() + 
+        		(friendlyNameSuffix == null ? "" : friendlyNameSuffix));
+        //log.info(String.format("proxy device udn: %s, real device udn: %s", newUDN, currentDevice.getIdentity().getUdn()));
+        
+        DeviceDetails newDetails;
+        if(friendlyNameSuffix == null) {
+        	newDetails = currentDevice.getDetails(); 
+        } else {
+//        	public DeviceDetails(URL baseURL, String friendlyName,
+//                    ManufacturerDetails manufacturerDetails, ModelDetails modelDetails,
+//                    String serialNumber, String upc,
+//                    URI presentationURI, DLNADoc[] dlnaDocs, DLNACaps dlnaCaps) {
+        	DeviceDetails curDetails = currentDevice.getDetails();
+        	newDetails = new DeviceDetails(curDetails.getBaseURL(), 
+        			String.format("%s [%s]", curDetails.getFriendlyName(), friendlyNameSuffix),
+        			curDetails.getManufacturerDetails(),
+        			curDetails.getModelDetails(),
+        			curDetails.getSerialNumber(),
+        			curDetails.getUpc(),
+        			curDetails.getPresentationURI(),
+        			curDetails.getDlnaDocs(),
+        			curDetails.getDlnaCaps());
+        					
+        }
+
         return currentDevice.newInstance(
-                currentDevice.getIdentity().getUdn(),
+        		newUDN,
                 currentDevice.getVersion(),
                 currentDevice.getType(),
-                currentDevice.getDetails(),
+                newDetails,
                 icons.toArray(new Icon[icons.size()]),
                 currentDevice.toServiceArray(services),
                 embeddedDevices
@@ -296,6 +373,23 @@ public class ProxyDiscovery extends DefaultRegistryListener {
         );
     }
 
+    public String getMimeTypeFromFileExt(String ext) {
+		if(ext.equals("gif")) return "image/gif";
+		if(ext.equals("png")) return "image/png";
+		if(ext.equals("bmp")) return "image/bmp";
+		if(ext.equals("jpg")) return "image/jpeg";
+		return null;
+	}
+    
+    public static String getFileExtension(String f) {
+        String ext = "";
+        int i = f.lastIndexOf('.');
+        if (i > 0 &&  i < f.length() - 1) {
+            ext = f.substring(i+1).toLowerCase();
+        }
+        return ext;
+    }
+
     protected byte[] retrieveIconData(Icon icon) {
         if (icon.getData() != null) return icon.getData(); // This should cover LocalDevice
 
@@ -313,10 +407,26 @@ public class ProxyDiscovery extends DefaultRegistryListener {
 
             if (response.getStatus() == Response.Status.OK.getStatusCode()) {
                 String contentType = response.getHeaders().getFirst("Content-Type");
-                if (contentType == null || !MimeType.valueOf(contentType).getType().equals("image")) {
+                if (contentType != null && !MimeType.valueOf(contentType).getType().equals("image")) {
+                	contentType = null;
+                }
+                
+                if(contentType == null) {
+                	String ext = getFileExtension(remoteURL);
+                	if(ext != null) {
+                		contentType = getMimeTypeFromFileExt(ext);
+                		if(contentType != null) {
+                			log.warning("Inferred icon content-type from URL extension: " + remoteURL);
+                		}
+                	}
+                }
+
+                if(contentType == null) {
                     log.warning("Retrieving icon data of '" + remoteURL + "' failed, no image content type: " + contentType);
                     return new byte[0];
                 }
+
+                
                 return response.getEntity();
             }
             log.warning("Retrieving icon data of '" + remoteURL + "' failed: " + response.getStatus());
@@ -326,9 +436,10 @@ public class ProxyDiscovery extends DefaultRegistryListener {
         return new byte[0];
     }
 
-
+    /*
     protected String getRemoteProxyURL(Endpoint endpoint, Device device) {
         return endpoint.getCallbackString() + new BridgeNamespace().getProxyPath(endpoint.getId(), device);
     }
+    */
 
 }

@@ -38,8 +38,6 @@ import javax.xml.xpath.XPath;
  */
 public class BridgeServerResource {
 
-    final private XHTMLParser parserXHTML = new XHTMLParser();
-
     protected ServletContext servletContext;
 
     protected UriInfo uriInfo;
@@ -98,27 +96,6 @@ public class BridgeServerResource {
         return UDN.valueOf(getFirstPathParamValue(Constants.PARAM_UDN));
     }
 
-    public XHTMLParser getParserXHTML() {
-        return parserXHTML;
-    }
 
-    public void createHead(XHTMLElement root, String title) {
-        root.createChild(XHTML.ELEMENT.head)
-                .createChild(XHTML.ELEMENT.title)
-                .setContent(title);
-    }
-
-    public Body createBodyTemplate(XHTML xhtml, XPath xpath, String title) {
-        XHTMLElement root = xhtml.createRoot(xpath, XHTML.ELEMENT.html);
-        createHead(root, title);
-        root.createChild(XHTML.ELEMENT.body);
-        return xhtml.getRoot(xpath).getBody();
-    }
-
-    protected String appendLocalCredentials(String uri) {
-        return UriBuilder.fromUri(uri)
-                .queryParam("auth", getConfiguration().getAuthManager().getLocalCredentials())
-                .build().toString();
-    }
 
 }
