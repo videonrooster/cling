@@ -30,86 +30,87 @@ import org.fourthline.cling.model.Constants;
  */
 public class ServiceId {
 
-    final private static Logger log = Logger.getLogger(ServiceId.class.getName());
+	final private static Logger log = Logger.getLogger(ServiceId.class.getName());
 
-    public static final Pattern PATTERN =
-            Pattern.compile("urn:(" + Constants.REGEX_NAMESPACE + "):serviceId:(" + Constants.REGEX_ID+ ")");
+	public static final Pattern PATTERN =
+			Pattern.compile("urn:(" + Constants.REGEX_NAMESPACE + "):serviceId:(" + Constants.REGEX_ID+ ")");
 
-    private String namespace;
-    private String id;
+	private String namespace;
+	private String id;
 
-    public ServiceId(String namespace, String id) {
-        if (namespace != null && !namespace.matches(Constants.REGEX_NAMESPACE)) {
-            throw new IllegalArgumentException("Service ID namespace contains illegal characters");
-        }
-        this.namespace = namespace;
+	public ServiceId(String namespace, String id) {
+		if (namespace != null && !namespace.matches(Constants.REGEX_NAMESPACE)) {
+			throw new IllegalArgumentException("Service ID namespace contains illegal characters");
+		}
+		this.namespace = namespace;
 
-        if (id != null && !id.matches(Constants.REGEX_ID)) {
-            throw new IllegalArgumentException("Service ID suffix too long (64) or contains illegal characters");
-        }
-        this.id = id;
-    }
+		if (id != null && !id.matches(Constants.REGEX_ID)) {
+			throw new IllegalArgumentException("Service ID suffix too long (64) or contains illegal characters");
+		}
+		this.id = id;
+	}
 
-    public String getNamespace() {
-        return namespace;
-    }
+	public String getNamespace() {
+		return namespace;
+	}
 
-    public String getId() {
-        return id;
-    }
+	public String getId() {
+		return id;
+	}
 
-    public static ServiceId valueOf(String s) throws InvalidValueException {
+	public static ServiceId valueOf(String s) throws InvalidValueException {
 
-        ServiceId serviceId = null;
+		ServiceId serviceId = null;
 
-        // First try UDAServiceId parse
-        try {
-            serviceId = UDAServiceId.valueOf(s);
-        } catch (Exception ex) {
-            // Ignore
-        }
+		// First try UDAServiceId parse
+		try {
+			serviceId = UDAServiceId.valueOf(s);
+		} catch (Exception ex) {
+			// Ignore
+		}
 
-        // Now try a generic ServiceId parse
-        if (serviceId == null) {
-            Matcher matcher = ServiceId.PATTERN.matcher(s);
-            if (matcher.matches()) {
-                return new ServiceId(matcher.group(1), matcher.group(2));
-            } else {
-            	// BBMOD: hack for ps audio
+		// Now try a generic ServiceId parse
+		if (serviceId == null) {
+			Matcher matcher = ServiceId.PATTERN.matcher(s);
+			if (matcher.matches()) {
+				return new ServiceId(matcher.group(1), matcher.group(2));
+			} else {
+				// hack for PS Audio Bridge which send a non compliant string
 
-            	String tokens[] = s.split("[:]");
-            	if(tokens.length != 4) {
-                throw new InvalidValueException("Can't parse Service ID string (namespace/id): " + s);
-            }
-            	log.warning("Invalid service ID, but still tokenizable ");
-                return new ServiceId(tokens[1], tokens[3]);
-            }
-        }
-        return serviceId;
-    }
+				String tokens[] = s.split("[:]");
+				if(tokens.length != 4) {
+					throw new InvalidValueException("Can't parse Service ID string (namespace/id): " + s);
+				}
+				
+				log.warning("Invalid service ID, but still tokenizable ");
+				return new ServiceId(tokens[1], tokens[3]);
+			}
+		}
+		return serviceId;
+	}
 
-    @Override
-    public String toString() {
-        return "urn:" + getNamespace() + ":serviceId:" + getId();
-    }
+	@Override
+	public String toString() {
+		return "urn:" + getNamespace() + ":serviceId:" + getId();
+	}
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || !(o instanceof ServiceId)) return false;
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || !(o instanceof ServiceId)) return false;
 
-        ServiceId serviceId = (ServiceId) o;
+		ServiceId serviceId = (ServiceId) o;
 
-        if (!id.equals(serviceId.id)) return false;
-        if (!namespace.equals(serviceId.namespace)) return false;
+		if (!id.equals(serviceId.id)) return false;
+		if (!namespace.equals(serviceId.namespace)) return false;
 
-        return true;
-    }
+		return true;
+	}
 
-    @Override
-    public int hashCode() {
-        int result = namespace.hashCode();
-        result = 31 * result + id.hashCode();
-        return result;
-    }
+	@Override
+	public int hashCode() {
+		int result = namespace.hashCode();
+		result = 31 * result + id.hashCode();
+		return result;
+	}
 }

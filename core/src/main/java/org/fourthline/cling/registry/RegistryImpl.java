@@ -155,8 +155,8 @@ public class RegistryImpl implements Registry {
 
     // #################################################################################################
     
-    synchronized public void setLocalDeviceAdvertising(LocalDevice localDevice, boolean advertising) {
-    	localItems.setDeviceAdvertising(localDevice, advertising);
+    synchronized public void setLocalDeviceAdvertising(LocalDevice localDevice, boolean isAdvertising) {
+    	localItems.setDeviceAdvertising(localDevice, isAdvertising);
     }
 
     synchronized public void addDevice(LocalDevice localDevice) {

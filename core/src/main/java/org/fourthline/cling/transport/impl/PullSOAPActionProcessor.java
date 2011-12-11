@@ -1,3 +1,28 @@
+/*
+ * Copyright (C) 2011 4th Line GmbH, Switzerland
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 2 of
+ * the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+
+/**
+ *  implementation based on the <em>Xml Pull Parser</em> XML processing API.
+ * <p>
+ * This processor is more lenient with parsing, look only for the required XML tags
+ * </p>
+ * @author Michael Pujos
+ */
 package org.fourthline.cling.transport.impl;
 
 import java.util.ArrayList;
@@ -32,7 +57,6 @@ public class PullSOAPActionProcessor extends SOAPActionProcessorImpl  {
 		try {
 			
 			XmlPullParser xpp = XmlPullParserUtils.createParser(body);
-			//readBodyElement(xpp);
 			// ignore the Body element, get directly to the request 
 			readBodyRequest(xpp, requestMessage, actionInvocation);
 
@@ -167,26 +191,6 @@ public class PullSOAPActionProcessor extends SOAPActionProcessorImpl  {
 		return null;
 	}
 
-/*
-	 public static final String RESPONSE_FAILURE = "<?xml version=\"1.0\"?>\n" +
-	            " <s:Envelope\n" +
-	            "     xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\"\n" +
-	            "     s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">\n" +
-	            "   <s:Body>\n" +
-	            "     <s:Fault>\n" +
-	            "       <faultcode>s:Client</faultcode>\n" +
-	            "       <faultstring>UPnPError</faultstring>\n" +
-	            "       <detail>\n" +
-	            "         <UPnPError xmlns=\"urn:schemas-upnp-org:control-1-0\">\n" +
-	            "           <errorCode>611</errorCode>\n" +
-	            "           <errorDescription>A test string</errorDescription>\n" +
-	            "         </UPnPError>\n" +
-	            "       </detail>\n" +
-	            "     </s:Fault>\n" +
-	            "   </s:Body>\n" +
-	            " </s:Envelope>";*/
-
-
 	private ActionException readFaultElement(XmlPullParser xpp) throws Exception {
 
 		String errorCode = null;
@@ -226,8 +230,5 @@ public class PullSOAPActionProcessor extends SOAPActionProcessorImpl  {
 		}
 		
 		throw new RuntimeException("Received fault element but no error code");
-
 	}
-
-
 }

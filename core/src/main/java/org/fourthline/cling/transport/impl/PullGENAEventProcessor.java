@@ -1,3 +1,27 @@
+/*
+ * Copyright (C) 2011 4th Line GmbH, Switzerland
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 2 of
+ * the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/**
+ *  implementation based on the <em>Xml Pull Parser</em> XML processing API.
+ * <p>
+ * This processor is more lenient with parsing, look only for the required XML tags
+ * </p>
+ * @author Michael Pujos
+ */
 package org.fourthline.cling.transport.impl;
 
 import java.util.logging.Logger;
@@ -17,7 +41,6 @@ public class PullGENAEventProcessor extends GENAEventProcessorImpl {
 
 		checkRequestBodyValidity(requestMessage);
 
-		// TODO: UPNP VIOLATION: Netgear 834DG DSL Router sends trailing spaces/newlines after last XML element, need to trim()
 		String body = requestMessage.getBodyString().trim();
 
 		try {
@@ -49,6 +72,7 @@ public class PullGENAEventProcessor extends GENAEventProcessorImpl {
 
 
 	private void readProperty(XmlPullParser xpp, IncomingEventRequestMessage message, StateVariable[] stateVariables) throws Exception  {
+
 		// we're inside the property tag
 	
 		int event ;
@@ -69,9 +93,5 @@ public class PullGENAEventProcessor extends GENAEventProcessorImpl {
 			}
 
 		} while(event != XmlPullParser.END_DOCUMENT && (event != XmlPullParser.END_TAG || !xpp.getName().equals("property")));
-
-		
 	}
-
-
 }

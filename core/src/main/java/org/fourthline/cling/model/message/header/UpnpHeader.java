@@ -62,7 +62,7 @@ public abstract class UpnpHeader<T> {
         SERVER("SERVER", ServerHeader.class),
         LOCATION("LOCATION", LocationHeader.class),
         MAX_AGE("CACHE-CONTROL", MaxAgeHeader.class),
-        USER_AGENT("USER-AGENT", UserAgentHeader.class), // disable checks for User-Agent to always be transmitted
+        USER_AGENT("USER-AGENT", UserAgentHeader.class),
         CONTENT_TYPE("CONTENT-TYPE", ContentTypeHeader.class),
         MAN("MAN", MANHeader.class),
         MX("MX", MXHeader.class),

@@ -1,9 +1,9 @@
 /*
- * Copyright (C) 2010 Teleal GmbH, Switzerland
+ * Copyright (C) 2011 4th Line GmbH, Switzerland
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
+ * published by the Free Software Foundation, either version 2 of
  * the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -30,11 +30,9 @@ import org.fourthline.cling.binding.xml.UDA10DeviceDescriptorBinderSAXImpl;
 import org.fourthline.cling.binding.xml.UDA10ServiceDescriptorBinderSAXImpl;
 import org.fourthline.cling.model.ExpirationDetails;
 import org.fourthline.cling.model.action.ActionInvocation;
-import org.fourthline.cling.model.meta.DeviceXMLParseException;
 import org.fourthline.cling.transport.Router;
 import org.fourthline.cling.transport.impl.DatagramIOConfigurationImpl;
 import org.fourthline.cling.transport.impl.DatagramIOImpl;
-import org.fourthline.cling.transport.impl.RecoverGENAEventProcessor;
 import org.fourthline.cling.transport.impl.RecoverSOAPActionProcessor;
 import org.fourthline.cling.transport.impl.apache.StreamClientConfigurationImpl;
 import org.fourthline.cling.transport.impl.apache.StreamClientImpl;
@@ -42,7 +40,6 @@ import org.fourthline.cling.transport.impl.apache.StreamServerConfigurationImpl;
 import org.fourthline.cling.transport.impl.apache.StreamServerImpl;
 import org.fourthline.cling.transport.spi.DatagramIO;
 import org.fourthline.cling.transport.spi.DatagramProcessor;
-import org.fourthline.cling.transport.spi.GENAEventProcessor;
 import org.fourthline.cling.transport.spi.InitializationException;
 import org.fourthline.cling.transport.spi.NetworkAddressFactory;
 import org.fourthline.cling.transport.spi.SOAPActionProcessor;
@@ -54,34 +51,29 @@ import android.content.Context;
 import com.bubblesoft.org.apache.http.params.CoreConnectionPNames;
 
 /**
- * Configuration settings for deployment on Android.
+ * Alternate configuration settings for deployment on Android.
  * <p>
  * This configuration utilizes the Apache HTTP Components transport implementation
- * found in {@link org.teleal.cling.transport.impl.apache} for TCP/HTTP networking. It
- * will attempt to bind only to the WiFi network interface and addresses on an
- * Android device.
+ * found in {@link org.fourthline.cling.transport.impl.apache} for TCP/HTTP networking. 
+ * It uses a NetworkAddressFactory compatible with all network types (Mobile, WiFi, Ethernet, ...)
  * </p>
  * <p>
  * This configuration utilizes the SAX default descriptor binders found in
- * {@link org.teleal.cling.binding.xml}. The system property <code>org.xml.sax.driver</code>
+ * {@link org.fourthline.cling.transport}. The system property <code>org.xml.sax.driver</code>
  * is set to <code>org.xmlpull.v1.sax2.Driver</code>.
  * </p>
  * <p>
- * The thread <code>Executor</code> is a <code>ThreadPoolExecutor</code> with the following
- * properties, optimized for machines with limited resources:
+ * This configuration utilizes the Pull SOAP Action processor found in
+ * {@link org.fourthline.cling.transport.impl} to workaround a bug in Android 3.0+. 
+ * See http://code.google.com/p/android/issues/detail?id=18102. 
  * </p>
- * <ul>
- * <li>Core pool size of minimum 8 idle threads</li>
- * <li>Maximum 16 threads active</li>
- * <li>5 seconds keep-alive time before an idle thread is removed from the pool</li>
- * <li>A FIFO queue of maximum 512 tasks waiting for a thread from the pool</li>
- * </ul>
  * <p>
- * A warning message will be logged when all threads of the pool have been exhausted
- * and executions have to be dropped.
+ * This configuration overrides the default DatagramIO and StreamServer implementations found in
+ * {@link org.fourthline.cling.transport.impl} to avoid reverse DNS timeout issues on some Android / WiFi router combos. 
  * </p>
  *
  * @author Christian Bauer
+ * @author Michael Pujos
  */
 public class AndroidUpnpServiceConfiguration extends DefaultUpnpServiceConfiguration {
 
@@ -92,7 +84,6 @@ public class AndroidUpnpServiceConfiguration extends DefaultUpnpServiceConfigura
 	public AndroidUpnpServiceConfiguration(Context context) {
 		this(context,  0); // Ephemeral port
 	}
-
 
 	public AndroidUpnpServiceConfiguration(Context context, int streamListenPort) {
 		super(streamListenPort, false);
@@ -220,7 +211,7 @@ public class AndroidUpnpServiceConfiguration extends DefaultUpnpServiceConfigura
 		};
 	}
 	
-	// Uncomment this if you're dealing with UPnP AV renderers and thank me later...
+	// Use this if you're dealing with UPnP AV renderers and thank me later...
 	//	@Override
 	//	protected GENAEventProcessor createGENAEventProcessor() {
 	//		return new RecoverGENAEventProcessor();
@@ -252,6 +243,4 @@ public class AndroidUpnpServiceConfiguration extends DefaultUpnpServiceConfigura
 	protected NetworkAddressFactory createNetworkAddressFactory(int streamListenPort) {
 		return new AndroidNetworkAddressFactory(streamListenPort);
 	}
-
-
 }

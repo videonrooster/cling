@@ -239,12 +239,12 @@ class LocalItems extends RegistryItems<LocalDevice, LocalGENASubscription> {
         }
     }
 
-	public void setDeviceAdvertising(LocalDevice localDevice, boolean advertising) {
-		if(advertising == localDevice.isAdvertising()) return ;
+	public void setDeviceAdvertising(LocalDevice localDevice, boolean isAdvertising) {
+		if(isAdvertising == localDevice.isAdvertising()) return ;
 		
-		localDevice.setAdvertising(advertising);
+		localDevice.setAdvertising(isAdvertising);
 		
-		if(advertising) {
+		if(isAdvertising) {
 			advertiseAlive(localDevice);
 		} else {
 			advertiseByebye(localDevice, true);

@@ -351,9 +351,9 @@ public interface Registry {
      * Enable/Disable advertising of a local device on the LAN
      * 
      * @param localDevice The local device to operate
-     * @param advertising true to enable advertising, false otherwise
+     * @param isAdvertising true to enable advertising, false otherwise
 	 */
-    public void setLocalDeviceAdvertising(LocalDevice localDevice, boolean advertising);
+    public void setLocalDeviceAdvertising(LocalDevice localDevice, boolean isAdvertising);
 
 
     // #################################################################################################

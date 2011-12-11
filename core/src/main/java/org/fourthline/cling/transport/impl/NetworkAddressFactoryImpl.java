@@ -433,7 +433,7 @@ public class NetworkAddressFactoryImpl implements NetworkAddressFactory {
         while (iias.hasNext()) {
             InterfaceAddress ia = iias.next();
             if(ia == null) {
-            	log.warning("WTF: skipping null InterfaceAddress...");
+            	log.warning("skipping null InterfaceAddress");
             	continue;
             }
             log.info(" Interface Address");
@@ -446,7 +446,7 @@ public class NetworkAddressFactoryImpl implements NetworkAddressFactory {
 
         for (NetworkInterface subIf : Collections.list(subIfs)) {
         	if(subIf == null) {
-            	log.warning("WTF: skipping null NetworkInterface sub-interface...");
+            	log.warning("skipping null NetworkInterface sub-interface");
             	continue;
             }
         	log.info(String.format("\tSub Interface Display name: %s", subIf.getDisplayName()));

@@ -43,109 +43,108 @@ import java.util.logging.Logger;
  */
 public class ReceivingEvent extends ReceivingSync<StreamRequestMessage, OutgoingEventResponseMessage> {
 
-    final private static Logger log = Logger.getLogger(ReceivingEvent.class.getName());
+	final private static Logger log = Logger.getLogger(ReceivingEvent.class.getName());
 
-    public ReceivingEvent(UpnpService upnpService, StreamRequestMessage inputMessage) {
-        super(upnpService, inputMessage);
-    }
+	public ReceivingEvent(UpnpService upnpService, StreamRequestMessage inputMessage) {
+		super(upnpService, inputMessage);
+	}
 
-    protected OutgoingEventResponseMessage executeSync() {
+	protected OutgoingEventResponseMessage executeSync() {
 
-        if (!getInputMessage().isContentTypeTextUDA()) {
-            log.warning("Received without or with invalid Content-Type: " + getInputMessage());
-            // We continue despite the invalid UPnP message because we can still hope to convert the content
-            // return new StreamResponseMessage(new UpnpResponse(UpnpResponse.Status.UNSUPPORTED_MEDIA_TYPE));
-        }
+		if (!getInputMessage().isContentTypeTextUDA()) {
+			log.warning("Received without or with invalid Content-Type: " + getInputMessage());
+			// We continue despite the invalid UPnP message because we can still hope to convert the content
+			// return new StreamResponseMessage(new UpnpResponse(UpnpResponse.Status.UNSUPPORTED_MEDIA_TYPE));
+		}
 
-        ServiceEventCallbackResource resource =
-                getUpnpService().getRegistry().getResource(
-                        ServiceEventCallbackResource.class,
-                        getInputMessage().getUri()
-                );
+		ServiceEventCallbackResource resource =
+				getUpnpService().getRegistry().getResource(
+						ServiceEventCallbackResource.class,
+						getInputMessage().getUri()
+						);
 
-        if (resource == null) {
-            log.fine("No local resource found: " + getInputMessage());
-            return new OutgoingEventResponseMessage(new UpnpResponse(UpnpResponse.Status.NOT_FOUND));
-        }
+		if (resource == null) {
+			log.fine("No local resource found: " + getInputMessage());
+			return new OutgoingEventResponseMessage(new UpnpResponse(UpnpResponse.Status.NOT_FOUND));
+		}
 
-        final IncomingEventRequestMessage requestMessage =
-                new IncomingEventRequestMessage(getInputMessage(), resource.getModel());
+		final IncomingEventRequestMessage requestMessage =
+				new IncomingEventRequestMessage(getInputMessage(), resource.getModel());
 
-        // Error conditions UDA 1.0 section 4.2.1
-        if (requestMessage.getSubscrptionId() == null) {
-            log.fine("Subscription ID missing in event request: " + getInputMessage());
-            return new OutgoingEventResponseMessage(new UpnpResponse(UpnpResponse.Status.PRECONDITION_FAILED));
-        }
+		// Error conditions UDA 1.0 section 4.2.1
+		if (requestMessage.getSubscrptionId() == null) {
+			log.fine("Subscription ID missing in event request: " + getInputMessage());
+			return new OutgoingEventResponseMessage(new UpnpResponse(UpnpResponse.Status.PRECONDITION_FAILED));
+		}
 
-        if (!requestMessage.hasValidNotificationHeaders()) {
-            log.fine("Missing NT and/or NTS headers in event request: " + getInputMessage());
-            return new OutgoingEventResponseMessage(new UpnpResponse(UpnpResponse.Status.BAD_REQUEST));
-        }
+		if (!requestMessage.hasValidNotificationHeaders()) {
+			log.fine("Missing NT and/or NTS headers in event request: " + getInputMessage());
+			return new OutgoingEventResponseMessage(new UpnpResponse(UpnpResponse.Status.BAD_REQUEST));
+		}
 
-        if (!requestMessage.hasValidNotificationHeaders()) {
-            log.fine("Invalid NT and/or NTS headers in event request: " + getInputMessage());
-            return new OutgoingEventResponseMessage(new UpnpResponse(UpnpResponse.Status.PRECONDITION_FAILED));
-        }
+		if (!requestMessage.hasValidNotificationHeaders()) {
+			log.fine("Invalid NT and/or NTS headers in event request: " + getInputMessage());
+			return new OutgoingEventResponseMessage(new UpnpResponse(UpnpResponse.Status.PRECONDITION_FAILED));
+		}
 
-        if (requestMessage.getSequence() == null) {
-            log.fine("Sequence missing in event request: " + getInputMessage());
-            return new OutgoingEventResponseMessage(new UpnpResponse(UpnpResponse.Status.PRECONDITION_FAILED));
-        }
+		if (requestMessage.getSequence() == null) {
+			log.fine("Sequence missing in event request: " + getInputMessage());
+			return new OutgoingEventResponseMessage(new UpnpResponse(UpnpResponse.Status.PRECONDITION_FAILED));
+		}
 
-        try {
+		try {
 
-            getUpnpService().getConfiguration().getGenaEventProcessor().readBody(requestMessage);
+			getUpnpService().getConfiguration().getGenaEventProcessor().readBody(requestMessage);
 
 		} catch (final UnsupportedDataException ex) {
-            log.fine("Can't read request body, " + ex);
+			log.fine("Can't read request body, " + ex);
 
 			final RemoteGENASubscription subscription =
 					getUpnpService().getRegistry().getRemoteSubscription(requestMessage.getSubscrptionId());
-			if(subscription != null) {
 
+			if(subscription != null) {
 				getUpnpService().getConfiguration().getRegistryListenerExecutor().execute(
 						new Runnable() {
 							public void run() {
-								log.fine("Calling active subscription with event state variable values");
 								subscription.invalidXMLException((String)ex.getData(), (Exception)ex.getCause());
 							}
 						}
-						);
+				);
 			}
 
-            return new OutgoingEventResponseMessage(new UpnpResponse(UpnpResponse.Status.INTERNAL_SERVER_ERROR));
-        }
+			return new OutgoingEventResponseMessage(new UpnpResponse(UpnpResponse.Status.INTERNAL_SERVER_ERROR));
+		}
 
-        try {
-            // Prevent registration of outgoing subscriptions while this event is being processed, and
-            // block if there is an ongoing subscription procedure (most likely this is the initial
-            // event for this subscription)
-            getUpnpService().getRegistry().lockRemoteSubscriptions();
+		try {
+			// Prevent registration of outgoing subscriptions while this event is being processed, and
+			// block if there is an ongoing subscription procedure (most likely this is the initial
+			// event for this subscription)
+			getUpnpService().getRegistry().lockRemoteSubscriptions();
 
-            final RemoteGENASubscription subscription =
-                    getUpnpService().getRegistry().getRemoteSubscription(requestMessage.getSubscrptionId());
+			final RemoteGENASubscription subscription =
+					getUpnpService().getRegistry().getRemoteSubscription(requestMessage.getSubscrptionId());
 
-            if (subscription == null) {
-                log.severe("Invalid subscription ID, no active subscription: " + requestMessage);
-                return new OutgoingEventResponseMessage(new UpnpResponse(UpnpResponse.Status.PRECONDITION_FAILED));
-            }
+			if (subscription == null) {
+				log.severe("Invalid subscription ID, no active subscription: " + requestMessage);
+				return new OutgoingEventResponseMessage(new UpnpResponse(UpnpResponse.Status.PRECONDITION_FAILED));
+			}
 
-            getUpnpService().getConfiguration().getRegistryListenerExecutor().execute(
-                    new Runnable() {
-                        public void run() {
-                            log.fine("Calling active subscription with event state variable values");
-                            subscription.receive(
-                                    requestMessage.getSequence(),
-                                    requestMessage.getStateVariableValues()
-                            );
-                        }
-                    }
-            );
-        } finally {
-            getUpnpService().getRegistry().unlockRemoteSubscriptions();
-        }
+			getUpnpService().getConfiguration().getRegistryListenerExecutor().execute(
+					new Runnable() {
+						public void run() {
+							log.fine("Calling active subscription with event state variable values");
+							subscription.receive(
+									requestMessage.getSequence(),
+									requestMessage.getStateVariableValues()
+									);
+						}
+					}
+					);
+		} finally {
+			getUpnpService().getRegistry().unlockRemoteSubscriptions();
+		}
 
-        return new OutgoingEventResponseMessage();
+		return new OutgoingEventResponseMessage();
 
-    }
+	}
 }

@@ -60,7 +60,9 @@ public interface NetworkAddressFactory {
      */
     public InetAddress[] getBindAddresses();
     
-    
+    /**
+     * @return The network prefix length of this address.
+     */
     public Short getAddressNetworkPrefixLength(InetAddress inetAddress);
 
     /**

@@ -69,7 +69,7 @@ public class ConnectionManagerService {
     final protected PropertyChangeSupport propertyChangeSupport;
     final protected Map<Integer, ConnectionInfo> activeConnections = new ConcurrentHashMap();
     final protected ProtocolInfos sourceProtocolInfo;
-    protected ProtocolInfos sinkProtocolInfo;
+    final protected ProtocolInfos sinkProtocolInfo;
 
     /**
      * Creates a default "active" connection with identifier "0".

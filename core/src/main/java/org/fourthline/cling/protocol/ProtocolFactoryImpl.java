@@ -159,15 +159,16 @@ public class ProtocolFactoryImpl implements ProtocolFactory {
         } else if (getUpnpService().getConfiguration().getNamespace().isEventCallbackPath(message.getUri())) {
 
         	// workaround Onkyo bug with garbage trailing chars:
-        	// /dev/9bb022aa-e922-aab9-682b-aa09e9b9e059/svc/upnp-org/RenderingControl/event/cb192%2e168%2e10%2e38
+        	// /dev/9bb022aa-e922-aab9-682b-aa09e9b9e059/svc/upnp-org/RenderingControl/event/cb192%2e168%2e10%2e38 is sent
+        	// instead of: /dev/9bb022aa-e922-aab9-682b-aa09e9b9e059/svc/upnp-org/RenderingControl/event/cb
         	
         	String uri = message.getUri().toString();
         	if(!uri.endsWith(Namespace.CALLBACK_FILE)) {
-        		log.warning("trailing garbage charaters detected at the end of sub event URL...fixing");
+        		log.warning("trailing garbage characters detected at the end of sub event URL");
         		int pos = uri.indexOf(Namespace.CALLBACK_FILE);
         		if(pos != -1) {
         			uri = uri.substring(0, pos + Namespace.CALLBACK_FILE.length());
-        			log.warning("fixed URI: " + uri);
+        			log.warning("fixed bad sub event URL");
         			message.setUri(URI.create(uri));
         		}
         	}

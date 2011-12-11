@@ -33,7 +33,7 @@ public class EventXMLProcessingRecoveryTest {
 
 	final private static Logger log = Logger.getLogger(EventXMLProcessingRecoveryTest.class.getName());
 
-	Map<String, Object> _values = new HashMap<String, Object>();
+	Map<String, Object> values = new HashMap<String, Object>();
 	
 	static {
 		LoggingUtil.resetRootHandler(new SystemOutLoggingHandler());
@@ -113,7 +113,7 @@ public class EventXMLProcessingRecoveryTest {
 					log.warning("could not parse LastChange fully: " + e);
 				}
 
-				assert !_values.isEmpty();
+				assert !values.isEmpty();
 
 				break;
 			}
@@ -138,7 +138,7 @@ public class EventXMLProcessingRecoveryTest {
 		
 		XmlPullParser xpp = XmlPullParserUtils.createParser(lastChange);
 
-		_values.clear();
+		values.clear();
 		
 		xpp.nextTag();
 		
@@ -152,7 +152,7 @@ public class EventXMLProcessingRecoveryTest {
 				log.warning(String.format("skipping Event name=%s for which there is no value", tag));
 				continue;
 			}
-			_values.put(tag, value);
+			values.put(tag, value);
 			//log.info(tag + ": " + value);
 		}
 

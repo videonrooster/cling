@@ -174,7 +174,7 @@ public class SwitchableRouterImpl implements SwitchableRouter {
     	try {
         	disable();
     	} catch(RouterLockAcquisitionException e) {
-    		log.warning(e.getMessage());
+    		log.warning("cannot disable router on shutdown: " + e);
     	}
     }
 
