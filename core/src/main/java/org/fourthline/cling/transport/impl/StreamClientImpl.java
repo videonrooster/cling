@@ -123,8 +123,8 @@ public class StreamClientImpl implements StreamClient {
             urlConnection = (HttpURLConnection) url.openConnection();
 
             urlConnection.setRequestMethod(requestOperation.getHttpMethodName());
-            urlConnection.setReadTimeout(configuration.getDataReadTimeoutSeconds() * 1000);
-            urlConnection.setConnectTimeout(configuration.getConnectionTimeoutSeconds() * 1000);
+            urlConnection.setReadTimeout(20 * 1000);
+            urlConnection.setConnectTimeout(20 * 1000);
 
             applyRequestProperties(urlConnection, requestMessage);
             applyRequestBody(urlConnection, requestMessage);
