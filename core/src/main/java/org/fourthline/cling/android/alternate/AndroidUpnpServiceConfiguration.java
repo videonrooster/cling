@@ -100,6 +100,7 @@ public class AndroidUpnpServiceConfiguration extends DefaultUpnpServiceConfigura
 	public DatagramIO createDatagramIO(NetworkAddressFactory networkAddressFactory) {
 		return new DatagramIOImpl(new DatagramIOConfigurationImpl()) {
 
+			
 			@Override
 			synchronized public void init(InetAddress bindAddress, Router router, DatagramProcessor datagramProcessor) throws InitializationException {
 
@@ -120,6 +121,7 @@ public class AndroidUpnpServiceConfiguration extends DefaultUpnpServiceConfigura
 					throw new InitializationException("Could not initialize " + getClass().getSimpleName() + ": " + ex);
 				}
 			}
+			
 		};
 	}
 
@@ -138,6 +140,7 @@ public class AndroidUpnpServiceConfiguration extends DefaultUpnpServiceConfigura
 					}
 				}) 	{
 
+			
 			@Override
 			synchronized public void init(InetAddress bindAddress, Router router) throws InitializationException {
 
@@ -160,6 +163,7 @@ public class AndroidUpnpServiceConfiguration extends DefaultUpnpServiceConfigura
 				}
 
 			}
+			
 		};
 	}
 
