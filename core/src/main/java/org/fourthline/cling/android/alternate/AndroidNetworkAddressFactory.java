@@ -67,19 +67,6 @@ public class AndroidNetworkAddressFactory extends NetworkAddressFactoryImpl {
 	}
 
 	@Override
-	protected void discoverNetworkInterfaces() throws InitializationException {
-		super.discoverNetworkInterfaces();
-		/*
-		if(networkInterfaces.size() > 1) {
-			NetworkInterface iface = networkInterfaces.get(0);
-			networkInterfaces.clear();
-			networkInterfaces.add(iface);
-			log.warning("found several network interfaces, keeping only the first one");
-		}
-		*/
-	}
-
-	@Override
 	public byte[] getHardwareAddress(InetAddress inetAddress) {
 		if(android.os.Build.VERSION.SDK_INT >= VERSION_CODE_GINGERBREAD) {
 			try {

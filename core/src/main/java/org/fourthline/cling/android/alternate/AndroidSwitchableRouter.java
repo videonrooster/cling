@@ -27,6 +27,7 @@ import org.fourthline.cling.transport.SwitchableRouterImpl;
 import org.fourthline.cling.transport.impl.NetworkAddressFactoryImpl;
 import org.fourthline.cling.transport.spi.InitializationException;
 import org.fourthline.cling.transport.spi.NetworkAddressFactory;
+import org.seamless.util.Exceptions;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -118,7 +119,6 @@ public class AndroidSwitchableRouter extends SwitchableRouterImpl {
 		this.context.registerReceiver(broadcastReceiver, new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
 	}
 	
-
 	public NetworkInfo getNetworkInfo() {
 		return networkInfo;
 	}
@@ -233,7 +233,7 @@ public class AndroidSwitchableRouter extends SwitchableRouterImpl {
 
 		if(newNetwork != null) {
 			networkInfo = newNetwork;
-			if(enable()) {
+			if(enable()) { // can return false (via earlier InitializationException thrown by NetworkAddressFactory) if no bindable network address found !
 				log.info(String.format("enabled router on network type change (new network: %s)", newNetwork.getTypeName()));
 			}
 		}
@@ -247,8 +247,10 @@ public class AndroidSwitchableRouter extends SwitchableRouterImpl {
 	
 	// should be called by user of this class after Router is fully initialized by UpnpService to get the
 	// first notification of network info state
-	public void start() {
+	// return true if router is enabled
+	public boolean start() {
 		onNetworkTypeChange(null, networkInfo);
+		return isEnabled();
 	}
 	
 	public void enableWiFi() {

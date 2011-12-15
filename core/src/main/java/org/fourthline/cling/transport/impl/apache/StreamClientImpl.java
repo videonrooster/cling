@@ -41,14 +41,12 @@ import com.bubblesoft.org.apache.http.client.ResponseHandler;
 import com.bubblesoft.org.apache.http.client.methods.HttpGet;
 import com.bubblesoft.org.apache.http.client.methods.HttpPost;
 import com.bubblesoft.org.apache.http.client.methods.HttpUriRequest;
-import com.bubblesoft.org.apache.http.conn.params.ConnManagerParams;
 import com.bubblesoft.org.apache.http.conn.scheme.PlainSocketFactory;
 import com.bubblesoft.org.apache.http.conn.scheme.Scheme;
 import com.bubblesoft.org.apache.http.conn.scheme.SchemeRegistry;
 import com.bubblesoft.org.apache.http.entity.ByteArrayEntity;
 import com.bubblesoft.org.apache.http.entity.StringEntity;
 import com.bubblesoft.org.apache.http.impl.client.DefaultHttpClient;
-import com.bubblesoft.org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import com.bubblesoft.org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import com.bubblesoft.org.apache.http.params.BasicHttpParams;
 import com.bubblesoft.org.apache.http.params.CoreProtocolPNames;
@@ -96,21 +94,19 @@ public class StreamClientImpl implements StreamClient<StreamClientConfigurationI
         //HttpConnectionParams.setStaleCheckingEnabled(globalParams, getConfiguration().getStaleCheckingEnabled());
 
         SchemeRegistry registry = new SchemeRegistry();
-        registry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
+        registry.register(new Scheme("http", 80, PlainSocketFactory.getSocketFactory()));
         
         clientConnectionManager = new ThreadSafeClientConnManager(registry);
         clientConnectionManager.setMaxTotal(getConfiguration().getMaxTotalConnections());
         clientConnectionManager.setDefaultMaxPerRoute(100);
-        //ConnManagerParams.setMaxTotalConnections(globalParams, getConfiguration().getMaxTotalConnections());
-        //clientConnectionManager = new ThreadSafeClientConnManager(globalParams, registry);
-        
 
         httpClient = new DefaultHttpClient(clientConnectionManager, globalParams);
 
-        
+        /*
         if(getConfiguration().getRequestRetryCount() != -1) {
         	httpClient.setHttpRequestRetryHandler(new DefaultHttpRequestRetryHandler(getConfiguration().getRequestRetryCount(), false));
         }
+        */
         
         
     }
@@ -126,17 +122,26 @@ public class StreamClientImpl implements StreamClient<StreamClientConfigurationI
         final UpnpRequest requestOperation = requestMessage.getOperation();
         log.fine("Preparing HTTP request message with method '" + requestOperation.getHttpMethodName() + "': " + requestMessage);
 
+        HttpUriRequest httpRequest = null;
+        
         try {
 
             // Create the right HTTP request
-            HttpUriRequest httpRequest = createHttpRequest(requestMessage, requestOperation);
+            httpRequest = createHttpRequest(requestMessage, requestOperation);
 
             // Set all the headers on the request
             httpRequest.setParams(getRequestParams(requestMessage));
             HeaderUtil.add(httpRequest, requestMessage.getHeaders());
 
-            log.fine("Sending HTTP request: " + httpRequest.getURI());
-            return httpClient.execute(httpRequest, createResponseHandler());
+            long start = System.currentTimeMillis();
+            StreamResponseMessage response = httpClient.execute(httpRequest, createResponseHandler());
+            long elapsed = System.currentTimeMillis() - start;
+            //log.info("Sent HTTP request, got response (" + elapsed + "ms) :" + httpRequest.getURI());
+            if(elapsed > 5000) {
+            	log.warning("HTTP request took a long time: " + elapsed + "ms: " + httpRequest.getURI());
+            }
+            
+            return response;
 
         } catch (MethodNotSupportedException ex) {
             log.warning("Request aborted: " + ex.toString());
@@ -146,9 +151,7 @@ public class StreamClientImpl implements StreamClient<StreamClientConfigurationI
             log.warning("Cause: " + Exceptions.unwrap(ex));
             return null;
         } catch (IOException ex) {
-            //log.severe("Client connection was aborted: " + ex.getMessage()); // Don't log stacktrace
-            //ex.printStackTrace();
-        	log.fine("Client connection was aborted: " + ex.getMessage()); // Don't log stacktrace
+        	log.warning("Client connection was aborted: " + ex + ": " + httpRequest.getURI());
             return null;
         } catch (IllegalStateException ex) {
             log.fine("Illegal state: " + ex.getMessage()); // Don't log stacktrace
