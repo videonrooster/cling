@@ -40,8 +40,9 @@ public class UDAVersion implements Validatable {
     }
 
     public UDAVersion(int major, int minor) {
-        this.major = major;
-        this.minor = minor;
+    	// always use the defaults. Rygel sets major to 2 and is not discovered because of this
+        //this.major = major;
+        //this.minor = minor;
     }
 
     public int getMajor() {
@@ -62,7 +63,7 @@ public class UDAVersion implements Validatable {
                     "UDA major spec version must be 1"
             ));
         }
-        if (getMajor() < 0) {
+        if (getMinor() < 0) {
             errors.add(new ValidationError(
                     getClass(),
                     "minor",
