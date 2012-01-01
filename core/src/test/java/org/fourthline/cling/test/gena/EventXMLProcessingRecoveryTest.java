@@ -39,7 +39,12 @@ public class EventXMLProcessingRecoveryTest {
 		LoggingUtil.resetRootHandler(new SystemOutLoggingHandler());
 	}
 	
+	@Test
+	public void brokenNonXMLEscapedLastChange() throws Exception {
+		doTest("/brokenxml/propertyset/orange_liveradio.xml");
+	}
 	
+
 	@Test
 	public void brokenTruncatedXml() throws Exception {
 		doTest("/brokenxml/propertyset/truncated.xml");
@@ -67,6 +72,7 @@ public class EventXMLProcessingRecoveryTest {
 	public void brokenMarantz() throws Exception {
 		doTest("/brokenxml/propertyset/marantz_mcr603.xml");
 	}
+
 
 	private void doTest(String filename) throws Exception {
 		
