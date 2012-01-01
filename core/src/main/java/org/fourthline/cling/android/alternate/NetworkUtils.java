@@ -19,6 +19,8 @@ package org.fourthline.cling.android.alternate;
 
 import java.util.logging.Logger;
 
+import org.fourthline.cling.model.ModelUtil;
+
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -66,11 +68,11 @@ public class NetworkUtils {
 	}
 
 	static public boolean isSSDPEnabledNetwork(NetworkInfo networkInfo) {
-		return isWiFiNetwork(networkInfo) || isEthNetwork(networkInfo);
+		return isWiFiNetwork(networkInfo) || isEthNetwork(networkInfo) || ModelUtil.ANDROID_EMULATOR;
 	}
 
 	static public boolean isWiFiNetwork(NetworkInfo networkInfo) {
-		return isNetworkType(networkInfo, ConnectivityManager.TYPE_WIFI);
+		return isNetworkType(networkInfo, ConnectivityManager.TYPE_WIFI)  || ModelUtil.ANDROID_EMULATOR;
 	}
 
 	static public boolean isMobileNetwork(NetworkInfo networkInfo) {
