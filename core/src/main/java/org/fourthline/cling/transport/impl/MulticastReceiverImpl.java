@@ -130,6 +130,8 @@ public class MulticastReceiverImpl implements MulticastReceiver<MulticastReceive
                 break;
             } catch (UnsupportedDataException ex) {
                 log.info("Could not read datagram: " + ex.getMessage());
+            } catch (IllegalStateException ex) {
+                log.info("Illegal State Exception: " + ex.getMessage());
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
