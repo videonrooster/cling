@@ -64,12 +64,17 @@ public class AndroidWifiSwitchableRouter extends SwitchableRouterImpl {
                         break;
                     }
                 }
-                if (!wifiInfo.isConnected() && (ethernet != null) && !ethernet.isUp()) {
-                    log.info("WiFi state changed, trying to disable router");
-                    disable();
-                } else {
-                    log.info("WiFi state changed, trying to enable router");
-                    enable();
+                try {
+                    if (!wifiInfo.isConnected() && (ethernet != null) && !ethernet.isUp()) {
+                        log.info("WiFi state changed, trying to disable router");
+                        disable();
+                    } else {
+                        log.info("WiFi state changed, trying to enable router");
+                        enable();
+                    }
+                } catch (java.lang.NoSuchMethodError nsme) {
+                    // Some ethernet devices do not implement isUp, not sure why.
+                    log.info("isUp() not implemented on ethernet interface: " + nsme);
                 }
             } catch (SocketException sx) {
             }
