@@ -64,8 +64,14 @@ public class AndroidUpnpServiceImpl extends Service {
 
     public void InitializeManager() {
         final Object wifiManager = getSystemService(Context.WIFI_SERVICE);
-        final Object ethernetManager = getSystemService("ethernet");
+        Object ethernetManager = null;
         Object tmpManager = null;
+
+        try {
+            ethernetManager = getSystemService("ethernet");
+        } catch (java.lang.UnsupportedOperationException use) {
+            ethernetManager = null;
+        }
 
         if (ethernetManager != null) {
             /**
