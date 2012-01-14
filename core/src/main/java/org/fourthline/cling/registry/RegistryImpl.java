@@ -29,6 +29,7 @@ import org.fourthline.cling.model.meta.RemoteDevice;
 import org.fourthline.cling.model.meta.RemoteDeviceIdentity;
 import org.fourthline.cling.model.meta.Service;
 import org.fourthline.cling.model.resource.Resource;
+import org.fourthline.cling.model.resource.ResourceProcessor;
 import org.fourthline.cling.model.types.DeviceType;
 import org.fourthline.cling.model.types.ServiceType;
 import org.fourthline.cling.model.types.UDN;
@@ -61,6 +62,7 @@ public class RegistryImpl implements Registry {
     protected UpnpService upnpService;
     protected RegistryMaintainer registryMaintainer;
     protected ReentrantLock remoteSubscriptionsLock = new ReentrantLock(true);
+    protected ResourceProcessor resourceMissingProcessor;	
 
     public RegistryImpl() {
     }
@@ -501,6 +503,14 @@ public class RegistryImpl implements Registry {
 	public void unlockRemoteSubscriptions() {
 		remoteSubscriptionsLock.unlock();
 	}
+	
+	@Override
+	public void setResourceMissingProcessor(ResourceProcessor resourceProcessor) {
+		resourceMissingProcessor = resourceProcessor;
+	}
 
-
+	@Override
+	public ResourceProcessor getResourceMissingProcessor() {
+		return resourceMissingProcessor;
+	}
 }

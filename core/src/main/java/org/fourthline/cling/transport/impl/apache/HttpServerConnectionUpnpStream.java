@@ -47,6 +47,7 @@ import com.bubblesoft.org.apache.http.HttpStatus;
 import com.bubblesoft.org.apache.http.MethodNotSupportedException;
 import com.bubblesoft.org.apache.http.ProtocolVersion;
 import com.bubblesoft.org.apache.http.entity.ByteArrayEntity;
+import com.bubblesoft.org.apache.http.entity.InputStreamEntity;
 import com.bubblesoft.org.apache.http.entity.StringEntity;
 import com.bubblesoft.org.apache.http.impl.DefaultConnectionReuseStrategy;
 import com.bubblesoft.org.apache.http.impl.DefaultHttpResponseFactory;
@@ -208,7 +209,6 @@ public class HttpServerConnectionUpnpStream extends UpnpStream {
             try {
                 responseMsg = process(requestMessage);
             } catch (RuntimeException ex) {
-
                 log.fine("Exception occured during UPnP stream processing: " + ex);
                 if (log.isLoggable(Level.FINE)) {
                     log.log(Level.FINE, "Cause: " + Exceptions.unwrap(ex), Exceptions.unwrap(ex));
@@ -245,6 +245,9 @@ public class HttpServerConnectionUpnpStream extends UpnpStream {
                 } else if (responseMsg.hasBody() && responseMsg.getBodyType().equals(UpnpMessage.BodyType.STRING)) {
                     StringEntity responseEntity = new StringEntity(responseMsg.getBodyString(), "UTF-8");
                     httpResponse.setEntity(responseEntity);
+                }  else if (responseMsg.hasBody() && responseMsg.getBodyType().equals(UpnpMessage.BodyType.STREAM)) {
+                	log.info("serving stream, len: " + responseMsg.getContentLength());
+                	httpResponse.setEntity(new InputStreamEntity(responseMsg.getInputStream(), responseMsg.getContentLength()));
                 }
 
             } else {
