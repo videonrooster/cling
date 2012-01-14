@@ -323,8 +323,7 @@ public class NetworkAddressFactoryImpl implements NetworkAddressFactory {
         }
 
         if (!iface.supportsMulticast()) {
-            log.finer("Skipping network interface (no multicast support): " + iface.getDisplayName());
-            return false;
+        	log.warning("Network interface reports it is not multicast capable: "  + iface.getDisplayName());
         }
 
         if (iface.isLoopback()) {
