@@ -72,7 +72,8 @@ public class AndroidNetworkAddressFactory extends NetworkAddressFactoryImpl {
 			try {
 				NetworkInterface iface = NetworkInterface.getByInetAddress(inetAddress);
 				return iface != null ? iface.getHardwareAddress() : null;
-			} catch (SocketException ex) {
+			} catch (Exception ex) {
+				// seen NullPointerException on Android 4.0.3 with inetAddress != null
 				// on Android we sometimes get "java.net.SocketException: No such device or address" when switching networks (mobile -> WiFi)
 				log.warning("cannot get hardware address for inet address: " + ex);
 			}
