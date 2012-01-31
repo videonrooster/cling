@@ -72,14 +72,7 @@ public class BridgeUpnpServiceConfiguration extends DefaultUpnpServiceConfigurat
         this.combinedDescriptorBinder = createCombinedDescriptorBinder();
 
         if(httpClient == null) {
-        	StreamClientConfigurationImpl streamConfiguration = new StreamClientConfigurationImpl() {
-        		public int getConnectionTimeoutSeconds() {
-    				return 5;
-    			}
-    			public int getDataReadTimeoutSeconds() {
-    				return 20;
-    			}
-        	};
+        	StreamClientConfigurationImpl streamConfiguration = new StreamClientConfigurationImpl();
         	
         	HttpParams params = new BasicHttpParams();
         	
