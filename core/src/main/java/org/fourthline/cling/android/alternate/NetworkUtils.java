@@ -67,10 +67,6 @@ public class NetworkUtils {
 		return isNetworkType(networkInfo, CONNECTIVITY_TYPE_ETHERNET);
 	}
 
-	static public boolean isSSDPEnabledNetwork(NetworkInfo networkInfo) {
-		return isWiFiNetwork(networkInfo) || isEthNetwork(networkInfo) || ModelUtil.ANDROID_EMULATOR;
-	}
-
 	static public boolean isWiFiNetwork(NetworkInfo networkInfo) {
 		return isNetworkType(networkInfo, ConnectivityManager.TYPE_WIFI)  || ModelUtil.ANDROID_EMULATOR;
 	}

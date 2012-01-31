@@ -49,24 +49,26 @@ import android.net.wifi.WifiManager;
 public class AndroidSwitchableRouter extends SwitchableRouterImpl {
 
 	private static Logger log = Logger.getLogger(Router.class.getName());
-	
-	public static class NoNetworkInitializationException extends InitializationException {
-		public NoNetworkInitializationException() {
-			super("no connected network found");
-		}
-	}
-	
-	final private ConnectivityManager connectivityManager;
+
 	final private Context context;
-	
+
 	// WiFi related
 	final private WifiManager wifiManager;
 	private WifiManager.MulticastLock multicastLock;
 	private WifiManager.WifiLock wifiLock;
 
 	private NetworkInfo networkInfo;
+
+	BroadcastReceiver broadcastReceiver;
 	
-	final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+	class ConnectivityBroadcastReceiver extends  BroadcastReceiver {
+		
+		private boolean isSameNetworkType(NetworkInfo network1, NetworkInfo network2) {
+			if(network1 == null && network2 == null) return true;
+			if(network1 == null || network2 == null) return false;
+			return network1.getType() == network2.getType(); 
+		}
+		
 		@Override
 		public void onReceive(Context context, Intent intent) {
 
@@ -75,11 +77,15 @@ public class AndroidSwitchableRouter extends SwitchableRouterImpl {
 			displayIntentInfo(intent);
 
 			NetworkInfo newNetworkInfo = NetworkUtils.getConnectedNetworkInfo(context);
-			if(newNetworkInfo != null && (networkInfo.getType() != newNetworkInfo.getType() && newNetworkInfo.isConnected())) {
-				// maybe we should also notify no network connectivity changes (info == null)
-				// but there is a short interval when this happens and is normal: going from WiFi <-> mobile
+			//if(newNetworkInfo != null && (networkInfo.getType() != newNetworkInfo.getType() && newNetworkInfo.isConnected())) {
+			// maybe we should also notify no network connectivity changes (info == null)
+			// but there is a short interval when this happens and is normal: going from WiFi <-> mobile
+			if(isSameNetworkType(networkInfo, newNetworkInfo)) {
+				log.info("No network change...ignoring event");
+			} else {
+				//log.info("waiting for 5s...");
+				//try {Thread.sleep(5000); } catch (InterruptedException e) { }
 				onNetworkTypeChange(networkInfo, newNetworkInfo);
-				return ;
 			}
 		}
 
@@ -102,28 +108,19 @@ public class AndroidSwitchableRouter extends SwitchableRouterImpl {
 		}
 
 	};
-	
+
 	public AndroidSwitchableRouter(UpnpServiceConfiguration configuration, ProtocolFactory protocolFactory, Context context) throws InitializationException {
 		super(configuration, protocolFactory);
-		
-		this.context = context;
-		
-		networkInfo = NetworkUtils.getConnectedNetworkInfo(context);
-		if(networkInfo == null) {
-			throw new NoNetworkInitializationException();
-		}
 
+		this.context = context;
 		wifiManager = ((WifiManager) context.getSystemService(Context.WIFI_SERVICE));
-		connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-		
-		this.context.registerReceiver(broadcastReceiver, new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
 	}
-	
+
 	public NetworkInfo getNetworkInfo() {
 		return networkInfo;
 	}
-	
-	
+
+
 	public boolean isMobileNetwork() {
 		return NetworkUtils.isMobileNetwork(networkInfo);
 	}
@@ -135,27 +132,23 @@ public class AndroidSwitchableRouter extends SwitchableRouterImpl {
 	public boolean isEthNetwork() {
 		return NetworkUtils.isEthNetwork(networkInfo);
 	}
-	
-	public boolean isSSDPEnabledNetwork() {
-		return NetworkUtils.isSSDPEnabledNetwork(networkInfo);
-	}
-	
+
 	public void displayInterfacesInformation() {
 		NetworkAddressFactory factory = getNetworkAddressFactory();
-		
+
 		if(factory instanceof NetworkAddressFactoryImpl) {
 			((NetworkAddressFactoryImpl)factory).displayInterfacesInformation();
 		} else {
 			log.warning("cannot display network interfaces: router not enabled");
 		}
-		
+
 	}
-	
+
 	@Override
 	protected int getLockTimeoutMillis() {
 		return 15000;
 	}
-	
+
 	private WifiManager.WifiLock createWiFiLock() {
 
 		int wifiMode = WifiManager.WIFI_MODE_FULL;
@@ -220,43 +213,48 @@ public class AndroidSwitchableRouter extends SwitchableRouterImpl {
 	// on first call, oldNetwork == null
 	// can be overriden by subclasses to do additional work
 	protected void onNetworkTypeChange(NetworkInfo oldNetwork, NetworkInfo newNetwork) {
-		
+
 		log.info(String.format("network type changed %s => %s", 
 				oldNetwork == null ? ""     : oldNetwork.getTypeName(), 
-				newNetwork == null ? "NONE" : newNetwork.getTypeName()));
+						newNetwork == null ? "NONE" : newNetwork.getTypeName()));
 
-		if(oldNetwork != null) {
-			if(disable()) {
-				log.info(String.format("disabled router on network type change (old network: %s)", oldNetwork.getTypeName()));	
-			}
+		if(disable()) {
+			log.info(String.format("disabled router on network type change (old network: %s)", oldNetwork == null ? "NONE" : oldNetwork.getTypeName()));	
 		}
 
-		if(newNetwork != null) {
-			networkInfo = newNetwork;
-			if(enable()) { // can return false (via earlier InitializationException thrown by NetworkAddressFactory) if no bindable network address found !
-				log.info(String.format("enabled router on network type change (new network: %s)", newNetwork.getTypeName()));
-			}
+		networkInfo = newNetwork;
+		if(enable()) { // can return false (via earlier InitializationException thrown by NetworkAddressFactory) if no bindable network address found !
+			log.info(String.format("enabled router on network type change (new network: %s)", newNetwork == null ? "NONE" : newNetwork.getTypeName()));
 		}
 	}
 
-	
+
 	public void shutdown()  {
 		super.shutdown();
-		context.unregisterReceiver(broadcastReceiver);
+		if(broadcastReceiver != null) {
+			context.unregisterReceiver(broadcastReceiver);
+		}
 	}
-	
+
 	// should be called by user of this class after Router is fully initialized by UpnpService to get the
 	// first notification of network info state
 	// return true if router is enabled
 	public boolean start() {
+		
+		networkInfo = NetworkUtils.getConnectedNetworkInfo(context);
 		onNetworkTypeChange(null, networkInfo);
-		return isEnabled();
+		if(!isEnabled()) return false;
+		
+		broadcastReceiver = new ConnectivityBroadcastReceiver();
+		context.registerReceiver(broadcastReceiver, new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
+		
+		return true;
 	}
-	
+
 	public void enableWiFi() {
 		log.info("enabling WiFi...");
 		wifiManager.setWifiEnabled(true);
-		
+
 	}
 
 	@Override
@@ -267,7 +265,7 @@ public class AndroidSwitchableRouter extends SwitchableRouterImpl {
 			if ((enabled = super.enable())) {
 				// Enable multicast on the WiFi network interface, requires android.permission.CHANGE_WIFI_MULTICAST_STATE
 
-				if(networkInfo.getType() == ConnectivityManager.TYPE_WIFI) {
+				if(NetworkUtils.isWiFiNetwork(networkInfo)) {
 					setWiFiMulticastLock(true);
 					setWifiLock(true);
 				}
@@ -282,7 +280,7 @@ public class AndroidSwitchableRouter extends SwitchableRouterImpl {
 	public boolean disable() throws RouterLockAcquisitionException {
 		lock(writeLock);
 		try {
-			if(networkInfo.getType() == ConnectivityManager.TYPE_WIFI) {
+			if(NetworkUtils.isWiFiNetwork(networkInfo)) {
 				setWiFiMulticastLock(false);
 				setWifiLock(false);
 			}

@@ -38,6 +38,11 @@ public class AndroidNetworkAddressFactory extends NetworkAddressFactoryImpl {
 	}
 
 	@Override
+	protected boolean requiresNetworkInterface() {
+    	return false;
+    }
+	
+	@Override
 	protected boolean isUsableNetworkInterface(NetworkInterface iface) throws Exception {
 
 		if(android.os.Build.VERSION.SDK_INT >= VERSION_CODE_GINGERBREAD && !iface.isUp()) {
