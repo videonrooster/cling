@@ -49,6 +49,9 @@ import java.util.logging.Logger;
  *
  * @author Christian Bauer
  */
+
+
+
 public class NetworkAddressFactoryImpl implements NetworkAddressFactory {
 
     // Ephemeral port is the default
@@ -63,6 +66,13 @@ public class NetworkAddressFactoryImpl implements NetworkAddressFactory {
     protected List<InetAddress> bindAddresses = new ArrayList();
 
     protected int streamListenPort;
+    
+    public static class  MissingNetworkInterfaceException extends InitializationException {
+
+		public MissingNetworkInterfaceException(String s) {
+			super(s);
+		}
+    }
 
     /**
      * Defaults to an ephemeral port.
@@ -99,14 +109,29 @@ public class NetworkAddressFactoryImpl implements NetworkAddressFactory {
         discoverNetworkInterfaces();
         discoverBindAddresses();
 
-        if (networkInterfaces.size() == 0 || bindAddresses.size() == 0) {
-            throw new InitializationException("Could not discover any bindable network interfaces and/or addresses");
+        
+        if ((networkInterfaces.size() == 0 || bindAddresses.size() == 0)) {
+            log.warning("No network interface or bind address found");
+        	if(requiresNetworkInterface()) {
+        		throw new MissingNetworkInterfaceException("Could not discover any bindable network interfaces and/or addresses");
+        	}
         }
+        
 
         this.streamListenPort = streamListenPort;
     }
     
+    protected boolean requiresNetworkInterface() {
+    	return true;
+    }
+    
     public void displayInterfacesInformation() {
+    	
+    	if(networkInterfaces.isEmpty()) {
+    		log.info("No network interface to display");
+    		return ;
+    	}
+    	
     	for(NetworkInterface iface : networkInterfaces) {
         	try {
 				displayInterfaceInformation(iface);
@@ -233,7 +258,7 @@ public class NetworkAddressFactoryImpl implements NetworkAddressFactory {
         if (ip.length != network.length) {
             return false;
         }
-
+        
         if (prefix / 8 > ip.length) {
             return false;
         }
@@ -246,6 +271,7 @@ public class NetworkAddressFactoryImpl implements NetworkAddressFactory {
             i++;
             prefix -= 8;
         }
+        if(i == ip.length) return true;
         final byte mask = (byte) ~((1 << 8 - prefix) - 1);
 
         return (ip[i] & mask) == (network[i] & mask);
