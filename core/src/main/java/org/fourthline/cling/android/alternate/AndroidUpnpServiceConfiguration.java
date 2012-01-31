@@ -173,11 +173,6 @@ public class AndroidUpnpServiceConfiguration extends DefaultUpnpServiceConfigura
 		return new StreamClientImpl(new StreamClientConfigurationImpl() {
 			
 			@Override
-			public int getConnectionTimeoutSeconds() {
-				return 5;
-			}
-
-			@Override
 			public boolean getStaleCheckingEnabled() {
 				// comment from AndroidHttpClient.java:
 				//
