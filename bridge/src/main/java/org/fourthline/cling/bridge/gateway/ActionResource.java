@@ -41,7 +41,7 @@ import org.seamless.util.Exceptions;
 /**
  * @author Christian Bauer
  */
-@Path("/res/dev/{UDN}/svc/{ServiceIdNamespace}/{ServiceId}/action")
+@Path("/dev/{UDN}/svc/{ServiceIdNamespace}/{ServiceId}/action")
 public class ActionResource extends GatewayServerResource {
 
     final private static Logger log = Logger.getLogger(ActionResource.class.getName());

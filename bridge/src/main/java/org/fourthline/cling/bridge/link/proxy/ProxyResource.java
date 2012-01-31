@@ -40,7 +40,7 @@ import org.seamless.util.Exceptions;
 /**
  * @author Christian Bauer
  */
-@Path("/res/link/{EndpointId}/proxy")
+@Path("/link/{EndpointId}/proxy")
 public class ProxyResource extends LinkResource {
 
     final private static Logger log = Logger.getLogger(ProxyResource.class.getName());

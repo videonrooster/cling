@@ -5,7 +5,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
 
-@Path("/res/connectiontest")
+@Path("/connectiontest")
 public class ConnectionTestResource extends GatewayServerResource {
 
     @GET

@@ -40,7 +40,7 @@ import com.bubblesoft.common.json.JsonScripts;
 /**
  * @author Christian Bauer
  */
-@Path("/res/link")
+@Path("/link")
 public class LinkResource extends BridgeServerResource {
 
     final private static Logger log = Logger.getLogger(LinkResource.class.getName());
