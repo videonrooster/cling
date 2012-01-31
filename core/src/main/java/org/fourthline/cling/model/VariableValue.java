@@ -17,6 +17,8 @@
 
 package org.fourthline.cling.model;
 
+import java.util.logging.Logger;
+
 import org.fourthline.cling.model.types.Datatype;
 import org.fourthline.cling.model.types.InvalidValueException;
 
@@ -72,10 +74,9 @@ public class VariableValue {
 
         if (!getDatatype().isValid(getValue()))
             throw new InvalidValueException("Invalid value for " + getDatatype() +": " + getValue());
-        if (!isValidXMLString(toString()))
-            throw new InvalidValueException(
-                    "Invalid characters in string value (XML 1.0, section 2.2) produced by " + getDatatype() +""
-            );
+        
+        // just display warnings. PS3 Media server sends null char in DIDL-Lite
+        isValidXMLString(toString());
     }
 
     public Datatype getDatatype() {
@@ -86,6 +87,8 @@ public class VariableValue {
         return value;
     }
 
+    final private static Logger log = Logger.getLogger(VariableValue.class.getName());
+    
     protected boolean isValidXMLString(String s) {
         // http://www.w3.org/TR/2000/REC-xml-20001006#NT-Char
         int cp;
@@ -96,7 +99,8 @@ public class VariableValue {
                     (cp >= 0x20 && cp <= 0xD7FF) ||
                     (cp >= 0xE000 && cp <= 0xFFFD) ||
                     (cp >= 0x10000 && cp <= 0x10FFFF))) {
-                return false;
+           		log.warning("found invalid XML char code: " + cp);
+           		return false;
             }
             i += Character.charCount(cp);
         }
