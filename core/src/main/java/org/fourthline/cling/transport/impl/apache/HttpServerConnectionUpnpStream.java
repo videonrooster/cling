@@ -18,6 +18,7 @@
 package org.fourthline.cling.transport.impl.apache;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.util.logging.Level;
@@ -51,6 +52,7 @@ import com.bubblesoft.org.apache.http.entity.InputStreamEntity;
 import com.bubblesoft.org.apache.http.entity.StringEntity;
 import com.bubblesoft.org.apache.http.impl.DefaultConnectionReuseStrategy;
 import com.bubblesoft.org.apache.http.impl.DefaultHttpResponseFactory;
+import com.bubblesoft.org.apache.http.impl.DefaultHttpServerConnection;
 import com.bubblesoft.org.apache.http.message.BasicStatusLine;
 import com.bubblesoft.org.apache.http.params.BasicHttpParams;
 import com.bubblesoft.org.apache.http.params.DefaultedHttpParams;
@@ -182,6 +184,13 @@ public class HttpServerConnectionUpnpStream extends UpnpStream {
 
             // Headers
             requestMessage.setHeaders(new UpnpHeaders(HeaderUtil.get(httpRequest)));
+            
+            InetAddress localAddress = ((DefaultHttpServerConnection)connection).getLocalAddress();
+            if(localAddress == null) {
+            	log.warning("got HTTP request without Local Address"); 
+            } else {
+            	requestMessage.setLocalAddress(localAddress.getHostAddress());
+            }
 
             // Body
             if (httpRequest instanceof HttpEntityEnclosingRequest) {

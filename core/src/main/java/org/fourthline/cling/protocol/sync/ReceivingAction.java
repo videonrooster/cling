@@ -17,6 +17,7 @@
 
 package org.fourthline.cling.protocol.sync;
 
+import java.net.InetAddress;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,6 +38,8 @@ import org.fourthline.cling.model.types.ErrorCode;
 import org.fourthline.cling.protocol.ReceivingSync;
 import org.fourthline.cling.transport.spi.UnsupportedDataException;
 import org.seamless.util.Exceptions;
+
+import sun.security.action.GetLongAction;
 
 /**
  * Handles reception of control messages, invoking actions on local services.
@@ -111,6 +114,7 @@ public class ReceivingAction extends ReceivingSync<StreamRequestMessage, StreamR
             // Throws ActionException if the action can't be found
             IncomingActionRequestMessage requestMessage =
                     new IncomingActionRequestMessage(getInputMessage(), resource.getModel());
+            requestMessage.setLocalAddress(getInputMessage().getLocalAddress());
 
             // Preserve message in a TL
             requestThreadLocal.set(requestMessage);
