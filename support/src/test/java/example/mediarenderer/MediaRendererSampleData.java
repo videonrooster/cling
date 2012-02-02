@@ -64,7 +64,7 @@ public class MediaRendererSampleData {
     }
 
     public static LocalDevice createDevice() throws Exception {
-        return new LocalDevice(
+    	LocalDevice device = new LocalDevice(
                 new DeviceIdentity(new UDN("1111")),
                 new UDADeviceType("MediaRenderer"),
                 new DeviceDetails("My MediaRenderer"),
@@ -73,6 +73,8 @@ public class MediaRendererSampleData {
                         createRenderingControlService()
                 }
         );
+    	device.setAdvertising(true); // BBMOD: by default local device is *not* advertising. Must set to true so tests expecting advertising pass
+    	return device;
     }
     
     public static class AudioRenderingControlService extends AbstractAudioRenderingControl {

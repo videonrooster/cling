@@ -35,8 +35,8 @@ public class RenderingControlLastChangeParser extends LastChangeParser {
         say "AVT_RCS", guess what most people use?
      */
     //public static final String NAMESPACE_URI = "urn:schemas-upnp-org:metadata-1-0/AVT_RCS";
-	public static final String NAMESPACE_URI = "urn:schemas-upnp-org:metadata-1-0/RCS/";
-    public static final String SCHEMA_RESOURCE = "org/teleal/cling/support/renderingcontrol/metadata-1.0-rcs.xsd";
+	public static final String NAMESPACE_URI = "urn:schemas-upnp-org:metadata-1-0/RCS";
+    public static final String SCHEMA_RESOURCE = "org/fourthline/cling/support/renderingcontrol/metadata-1.0-rcs.xsd";
 
     @Override
     protected String getNamespace() {

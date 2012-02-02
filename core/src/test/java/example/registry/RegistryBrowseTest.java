@@ -146,6 +146,10 @@ public class RegistryBrowseTest {
 
     @Test
     public void cleanupRemoteDevice() {
+    	
+    	// BBMOD: original cling uses cb.xml as the last path component. bb-cling uses cb as there is 
+    	// a buggy device percent encoding the dot and using that as the callback URL (which of course doesn't work) 
+    	
         MockUpnpService upnpService = new MockUpnpService();
         RemoteDevice rd = SampleData.createRemoteDevice();
 
@@ -154,7 +158,7 @@ public class RegistryBrowseTest {
         Assert.assertEquals(upnpService.getRegistry().getRemoteDevices().size(), 1);
 
         Resource resource = upnpService.getRegistry().getResource(
-                URI.create("/dev/MY-DEVICE-123/svc/upnp-org/MY-SERVICE-123/event/cb.xml")
+                URI.create("/dev/MY-DEVICE-123/svc/upnp-org/MY-SERVICE-123/event/cb")
         );
         assert resource != null;
 
@@ -163,7 +167,7 @@ public class RegistryBrowseTest {
         Assert.assertEquals(upnpService.getRegistry().getRemoteDevices().size(), 0);
 
         resource = upnpService.getRegistry().getResource(
-                URI.create("/dev/MY-DEVICE-123/svc/upnp-org/MY-SERVICE-123/event/cb.xml")
+                URI.create("/dev/MY-DEVICE-123/svc/upnp-org/MY-SERVICE-123/event/cb")
         );
         assert resource == null;
 

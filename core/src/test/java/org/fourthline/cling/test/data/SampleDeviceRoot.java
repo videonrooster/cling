@@ -114,17 +114,21 @@ public class SampleDeviceRoot extends SampleDevice {
     }
 
     public static void assertLocalResourcesMatch(Resource[] resources){
+    	
+    	// BBMOD: original cling uses cb.xml as the last path component. bb-cling uses cb as there is 
+    	// a buggy device percent encoding the dot and using that as the callback URL (which of course doesn't work) 
+    	
         assertEquals(
-                getLocalResource(resources, URI.create("/dev/MY-DEVICE-123/svc/upnp-org/MY-SERVICE-123/event/cb.xml")).getClass(),
+                getLocalResource(resources, URI.create("/dev/MY-DEVICE-123/svc/upnp-org/MY-SERVICE-123/event/cb")).getClass(),
                 ServiceEventCallbackResource.class
         );
 
         assertEquals(
-                getLocalResource(resources, URI.create("/dev/MY-DEVICE-456/svc/upnp-org/MY-SERVICE-456/event/cb.xml")).getClass(),
+                getLocalResource(resources, URI.create("/dev/MY-DEVICE-456/svc/upnp-org/MY-SERVICE-456/event/cb")).getClass(),
                 ServiceEventCallbackResource.class
         );
         assertEquals(
-                getLocalResource(resources, URI.create("/dev/MY-DEVICE-789/svc/upnp-org/MY-SERVICE-789/event/cb.xml")).getClass(),
+                getLocalResource(resources, URI.create("/dev/MY-DEVICE-789/svc/upnp-org/MY-SERVICE-789/event/cb")).getClass(),
                 ServiceEventCallbackResource.class
         );
     }
