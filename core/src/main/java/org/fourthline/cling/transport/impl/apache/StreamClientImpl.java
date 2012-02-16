@@ -156,6 +156,9 @@ public class StreamClientImpl implements StreamClient<StreamClientConfigurationI
         } catch (IllegalStateException ex) {
             log.fine("Illegal state: " + ex.getMessage()); // Don't log stacktrace
             return null;
+        } catch (IllegalArgumentException ex) {
+            log.warning("Illegal Argument exception : " + ex.toString());
+        	return null;
         }
     }
 
