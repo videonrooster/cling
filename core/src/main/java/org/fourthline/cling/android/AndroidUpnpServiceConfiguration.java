@@ -110,10 +110,10 @@ public class AndroidUpnpServiceConfiguration extends DefaultUpnpServiceConfigura
     public StreamClient createStreamClient() {
         return new StreamClientImpl(new StreamClientConfigurationImpl() {
         	public int getConnectionTimeoutSeconds() {
-                return 10;
+                return 2;
             }
         	public int getDataReadTimeoutSeconds() {
-                return 10;
+                return 3;
             }
         	public boolean getStaleCheckingEnabled() {
         		// comment from AndroidHttpClient.java:
