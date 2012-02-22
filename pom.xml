@@ -18,7 +18,7 @@
 <!--         <module>distribution</module> -->
         <module>support</module>
 <!--         <module>mediarenderer</module> -->
-        <module>bridge</module>
+<!--         <module>bridge</module> -->
 <!--         <module>osgi</module> -->
     </modules>
 
