@@ -26,6 +26,7 @@ public class Constants {
     public static final String INIT_PARAM_LOGGING_CONFIG = "org.fourthline.cling.bridge.loggingConfig";
 
     public static final String ATTR_UPNP_SERVICE = Constants.class.getName() + ".upnpService";
+    public static final String ATTR_OPTIONS = Constants.class.getName() + ".options";
 
     public static final String PARAM_UDN = "UDN";
     public static final String PARAM_SERVICE_ID_NS = "ServiceIdNamespace";
@@ -33,6 +34,6 @@ public class Constants {
     public static final String PARAM_ACTION_NAME = "ActionName";
     public static final String PARAM_ENDPOINT_ID = "EndpointId";
 
-    public static final int LINK_DEFAULT_TIMEOUT_SECONDS = 300;
+
 
 }

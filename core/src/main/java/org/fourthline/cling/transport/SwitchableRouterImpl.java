@@ -170,8 +170,12 @@ public class SwitchableRouterImpl implements SwitchableRouter {
         }
     }
 
-    public void shutdown() throws RouterLockAcquisitionException {
-        disable();
+    public void shutdown()  {
+    	try {
+        	disable();
+    	} catch(RouterLockAcquisitionException e) {
+    		log.warning("cannot disable router on shutdown: " + e);
+    	}
     }
 
     public void received(IncomingDatagramMessage msg) throws RouterLockAcquisitionException {
@@ -247,7 +251,7 @@ public class SwitchableRouterImpl implements SwitchableRouter {
      *         it takes the router to be started/shutdown.
      */
     protected int getLockTimeoutMillis() {
-        return 30000; /* Increased from 6s to 30s for XTT-810 */
+        return 6000;
     }
 
     class DisabledNetworkAddressFactory implements NetworkAddressFactory {
@@ -285,6 +289,11 @@ public class SwitchableRouterImpl implements SwitchableRouter {
                 throws IllegalStateException {
             return null;
         }
+
+		@Override
+		public Short getAddressNetworkPrefixLength(InetAddress inetAddress) {
+			return null;
+		}
     }
 
     public static class RouterLockAcquisitionException extends RuntimeException {

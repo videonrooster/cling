@@ -17,20 +17,25 @@
 
 package org.fourthline.cling.bridge.link.proxy;
 
+import java.util.logging.Logger;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
+
 import org.fourthline.cling.bridge.BridgeWebApplicationException;
 import org.fourthline.cling.bridge.link.EndpointResource;
 import org.fourthline.cling.bridge.link.LinkResource;
 import org.fourthline.cling.model.meta.LocalDevice;
 import org.fourthline.cling.model.types.UDN;
 import org.seamless.util.Exceptions;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.util.logging.Logger;
 
 /**
  * @author Christian Bauer
@@ -40,18 +45,25 @@ public class ProxyResource extends LinkResource {
 
     final private static Logger log = Logger.getLogger(ProxyResource.class.getName());
 
-    /* TODO
     @GET
-    public XHTML browseAll() {
-        XHTML result = getParserXHTML().createDocument();
-        Body body = createBodyTemplate(result, getParserXHTML().createXPath(), "Proxies");
-        body.createChild(ELEMENT.h1).setContent("Proxies");
-
-        XHTMLElement container = body.createChild(ELEMENT.ul).setId("proxies");
-
-        return result;
+    @Path("/{UDN}")
+    @Produces({MediaType.TEXT_XML, MediaType.APPLICATION_XML})
+    public Response getProxyDeviceDescriptor(@PathParam("UDN") String udn) {
+        EndpointResource resource = getRequestedEndpointResource();
+        log.fine("Received get proxy descriptor for: " + resource.getModel() + ", udn: " + udn);
+        
+        String body = getUpnpService().getLinkManager().getDeviceDiscovery().getProxyDeviceDescriptor(udn);
+        ResponseBuilder response;
+        if(body == null) {
+        	response = Response.status(Response.Status.NOT_FOUND);
+        } else {
+        	response = Response.status(Response.Status.OK);
+        	response.entity(body);
+        	response.header("EndpointId", resource.getModel());
+        }
+        return response.build();
     }
-    */
+
 
     @PUT
     @Path("/{UDN}")

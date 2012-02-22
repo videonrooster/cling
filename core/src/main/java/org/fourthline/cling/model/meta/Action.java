@@ -17,6 +17,7 @@
 
 package org.fourthline.cling.model.meta;
 
+import org.fourthline.cling.controlpoint.ActionCallback.ActionCallbackInterceptor;
 import org.fourthline.cling.model.ModelUtil;
 import org.fourthline.cling.model.Validatable;
 import org.fourthline.cling.model.ValidationError;
@@ -41,6 +42,18 @@ public class Action<S extends Service> implements Validatable {
 
     // Package mutable state
     private S service;
+    
+    private ActionCallbackInterceptor actionCallbackInterceptor;
+
+
+    public void setActionCallbackInterceptor(ActionCallbackInterceptor actionCallbackInterceptor) {
+    	this.actionCallbackInterceptor = actionCallbackInterceptor;
+    }
+    
+    public ActionCallbackInterceptor getActionCallbackInterceptor() {
+    	return actionCallbackInterceptor;
+    }
+
 
     public Action(String name, ActionArgument[] arguments) {
         this.name = name;

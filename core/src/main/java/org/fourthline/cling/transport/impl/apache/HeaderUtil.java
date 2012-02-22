@@ -17,12 +17,13 @@
 
 package org.fourthline.cling.transport.impl.apache;
 
-import org.apache.http.Header;
-import org.apache.http.HttpMessage;
-import org.seamless.http.Headers;
-
 import java.util.List;
 import java.util.Map;
+
+import org.seamless.http.Headers;
+
+import com.bubblesoft.org.apache.http.Header;
+import com.bubblesoft.org.apache.http.HttpMessage;
 
 /**
  * Converts from/to Apache HTTP Components header format.

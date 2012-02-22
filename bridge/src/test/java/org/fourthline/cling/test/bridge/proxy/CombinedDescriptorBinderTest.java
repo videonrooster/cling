@@ -17,19 +17,18 @@
 
 package org.fourthline.cling.test.bridge.proxy;
 
+import static org.testng.Assert.assertEquals;
+
+import java.io.InputStream;
+import java.net.URL;
+
 import org.fourthline.cling.bridge.BridgeUpnpServiceConfiguration;
-import org.fourthline.cling.bridge.auth.HashCredentials;
 import org.fourthline.cling.bridge.link.Endpoint;
 import org.fourthline.cling.bridge.link.proxy.CombinedDescriptorBinder;
 import org.fourthline.cling.model.meta.LocalDevice;
 import org.fourthline.cling.test.bridge.SampleData;
 import org.seamless.util.io.IO;
 import org.testng.annotations.Test;
-
-import java.io.InputStream;
-import java.net.URL;
-
-import static org.testng.Assert.assertEquals;
 
 /**
  * @author Christian Bauer
@@ -39,7 +38,7 @@ public class CombinedDescriptorBinderTest {
     @Test
     public void roundtrip() throws Exception {
 
-        BridgeUpnpServiceConfiguration config = new BridgeUpnpServiceConfiguration(SampleData.getLocalBaseURL(), "");
+        BridgeUpnpServiceConfiguration config = new BridgeUpnpServiceConfiguration(SampleData.getLocalBaseURL(), "", null);
 
         CombinedDescriptorBinder binder = new CombinedDescriptorBinder(config);
 
@@ -50,7 +49,7 @@ public class CombinedDescriptorBinderTest {
         InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("org/fourthline/cling/test/bridge/samples/test-device.xml");
         String xml = IO.readLines(is);
         is.close();
-        LocalDevice readDevice = binder.read(xml, new Endpoint("123", new URL("http://foo.bar/"), true, new HashCredentials("secret")));
+        LocalDevice readDevice = binder.read(xml, new Endpoint("123", new URL("http://foo.bar/")));
         String b = binder.write(readDevice);
 
         assertEquals(a, b);

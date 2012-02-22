@@ -118,6 +118,8 @@ public abstract class RemoteGENASubscription extends GENASubscription<RemoteServ
 
         eventReceived();
     }
+    
+    public abstract void invalidXMLException(String xml, Exception e);
 
     public abstract void failed(UpnpResponse responseStatus);
 

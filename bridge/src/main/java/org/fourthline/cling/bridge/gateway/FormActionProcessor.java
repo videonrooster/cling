@@ -17,7 +17,11 @@
 
 package org.fourthline.cling.bridge.gateway;
 
-import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.ws.rs.core.MultivaluedMap;
+
 import org.fourthline.cling.model.action.ActionArgumentValue;
 import org.fourthline.cling.model.action.ActionException;
 import org.fourthline.cling.model.action.ActionInvocation;
@@ -26,14 +30,9 @@ import org.fourthline.cling.model.meta.ActionArgument;
 import org.fourthline.cling.model.types.ErrorCode;
 import org.fourthline.cling.model.types.InvalidValueException;
 import org.seamless.util.URIUtil;
+import org.seamless.xhtml.XHTML.ATTR;
+import org.seamless.xhtml.XHTML.ELEMENT;
 import org.seamless.xhtml.XHTMLElement;
-
-import javax.ws.rs.core.MultivaluedMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.seamless.xhtml.XHTML.ATTR;
-import static org.seamless.xhtml.XHTML.ELEMENT;
 
 /**
  * @author Christian Bauer
@@ -42,8 +41,8 @@ public class FormActionProcessor {
 
     public static final String NULL_OUTPUT_ARGUMENT_VALUE = "<<NULL>>";
 
-    public ActionInvocation createInvocation(MultivaluedMap<String, String> form, Action action) throws InvalidValueException {
-        ActionInvocation invocation = new ActionInvocation(action);
+    public ActionInvocation createInvocation(MultivaluedMap<String, String> form, Action action, String remoteAddr, String userAgent) throws InvalidValueException {
+        ActionInvocation invocation = new ActionInvocation(action, userAgent);
         if (action.hasInputArguments()) {
             for (ActionArgument arg : action.getInputArguments()) {
                 // The first is OK, multiple keys we just ignore
@@ -98,12 +97,14 @@ public class FormActionProcessor {
         );
     }
 
+    /*
     public void readOutput(MultivaluedMap<String, String> form, ActionInvocation invocation) throws InvalidValueException {
         for (ActionArgument argument : invocation.getAction().getOutputArguments()) {
             String v = form.getFirst(argument.getName());
             invocation.setOutput(new ActionArgumentValue(argument, v));
         }
     }
+
 
     public void readFailure(MultivaluedMap<String, String> form, ActionInvocation invocation) {
         String errorCode = URIUtil.percentDecode(form.getFirst("error-code"));
@@ -116,13 +117,35 @@ public class FormActionProcessor {
                 new ActionException(Integer.parseInt(errorCode), errorDescription)
         );
     }
+    */
+    
+    public void readOutput(Map<String, String> form, ActionInvocation invocation) throws InvalidValueException {
+        for (ActionArgument argument : invocation.getAction().getOutputArguments()) {
+            String v = form.get(argument.getName());
+            invocation.setOutput(new ActionArgumentValue(argument, v));
+        }
+    }
+    
+    public void readFailure(Map<String, String> form, ActionInvocation invocation) {
+        String errorCode = URIUtil.percentDecode(form.get("error-code"));
+        String errorDescription = URIUtil.percentDecode(form.get("error-description"));
+        if (errorCode == null || errorCode.length() == 0) {
+            errorCode = String.valueOf(ErrorCode.ACTION_FAILED.getCode());
+            errorDescription = "No error description received";
+        }
+        invocation.setFailure(
+                new ActionException(Integer.parseInt(errorCode), errorDescription)
+        );
+    }
 
-    public MultivaluedMap<String, String> createForm(ActionInvocation invocation) {
-        MultivaluedMap<String, String> form = new MultivaluedMapImpl();
+    public Map<String, String> createForm(ActionInvocation invocation) {
+        //MultivaluedMap<String, String> form = new MultivaluedMapImpl();
+    	Map<String, String> form = new HashMap<String, String>();
         Action action = invocation.getAction();
         if (action.hasInputArguments()) {
             for (ActionArgumentValue argumentValue : invocation.getInput()) {
-                form.putSingle(argumentValue.getArgument().getName(), argumentValue.toString());
+                //form.putSingle(argumentValue.getArgument().getName(), argumentValue.toString());
+            	form.put(argumentValue.getArgument().getName(), argumentValue.toString());
             }
         }
         return form;
@@ -132,6 +155,18 @@ public class FormActionProcessor {
         return toString(createForm(invocation));
     }
 
+    public String toString(Map<String, String> form) {
+        StringBuilder s = new StringBuilder();
+        for (Map.Entry<String, String> entry : form.entrySet()) {
+               s.append(entry.getKey()).append("=").append(URIUtil.percentEncode(entry.getValue()));
+               s.append("&");
+        }
+        if (s.toString().endsWith("&"))
+            s.deleteCharAt(s.length() - 1);
+        return s.toString();
+    }
+
+    /*
     public String toString(MultivaluedMap<String, String> form) {
         StringBuilder s = new StringBuilder();
         for (Map.Entry<String, List<String>> entry : form.entrySet()) {
@@ -145,6 +180,7 @@ public class FormActionProcessor {
         return s.toString();
     }
 
+
     public MultivaluedMap<String, String> valueOf(String s) {
         MultivaluedMap<String, String> formData = new MultivaluedMapImpl<String, String>();
         String[] params = s.split("&");
@@ -155,6 +191,21 @@ public class FormActionProcessor {
                 formData.add(nv[0], URIUtil.percentDecode(val));
             } else {
                 formData.add(param, "");
+            }
+        }
+        return formData;
+    }
+    */
+    public Map<String, String> valueOf(String s) {
+        Map<String, String> formData = new HashMap<String, String>();
+        String[] params = s.split("&");
+        for (String param : params) {
+            if (param.indexOf('=') >= 0) {
+                String[] nv = param.split("=");
+                String val = nv.length > 1 ? nv[1] : "";
+                formData.put(nv[0], URIUtil.percentDecode(val));
+            } else {
+                formData.put(param, "");
             }
         }
         return formData;

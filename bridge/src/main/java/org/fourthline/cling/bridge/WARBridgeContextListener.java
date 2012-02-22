@@ -48,7 +48,7 @@ public class WARBridgeContextListener implements ServletContextListener {
 
         try {
             upnpService.setConfiguration(
-                    new BridgeUpnpServiceConfiguration(localBaseURL, sc.getContextPath())
+                    new BridgeUpnpServiceConfiguration(localBaseURL, sc.getContextPath(), null)
             );
 
             Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -105,7 +105,7 @@ public class WARBridgeContextListener implements ServletContextListener {
 
         if (localBaseURLString == null) {
             System.err.println(
-                    "Missing configuration parameter (as servlet contex parameter or system property): " + Constants.INIT_PARAM_LOCAL_BASE_URL
+                    "Missing configuration parameter (as servlet context parameter or system property): " + Constants.INIT_PARAM_LOCAL_BASE_URL
             );
             System.exit(1);
         }

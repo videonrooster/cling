@@ -136,7 +136,7 @@ public class SampleData {
 
             Constructor<LocalService> serviceConstructor = getLocalServiceConstructor();
 
-            return new SampleDeviceRootLocal(
+            LocalDevice device = new SampleDeviceRootLocal(
                     identity,
                     new SampleServiceOne().newInstanceLocal(serviceConstructor),
                     new SampleDeviceEmbeddedOne(
@@ -149,6 +149,8 @@ public class SampleData {
                             ).newInstance(ctor, useProvider)
                     ).newInstance(ctor, useProvider)
             ).newInstance(ctor, useProvider);
+            device.setAdvertising(true); // BBMOD: by default local device is *not* advertising. Must set to true so tests expecting advertising pass
+            return device;
 
         } catch (Exception e) {
             throw new RuntimeException(e);

@@ -59,6 +59,11 @@ public interface NetworkAddressFactory {
      *         sockets listening for unicast datagrams and TCP requests.
      */
     public InetAddress[] getBindAddresses();
+    
+    /**
+     * @return The network prefix length of this address.
+     */
+    public Short getAddressNetworkPrefixLength(InetAddress inetAddress);
 
     /**
      * @param inetAddress An address of a local network interface.

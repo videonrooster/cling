@@ -92,7 +92,7 @@ public class ProxyServiceDescriptorBinder extends UDA10ServiceDescriptorBinderIm
         Map<Action, ActionExecutor> executors = new HashMap();
 
         for (Action action : actions) {
-            executors.put(action, new ProxyActionExecutor(getConfiguration(), controlURL, getEndpoint().getCredentials()));
+            executors.put(action, new ProxyActionExecutor(getConfiguration(), controlURL));
         }
         return executors;
     }

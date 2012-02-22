@@ -1,9 +1,9 @@
 /*
- * Copyright (C) 2011 4th Line GmbH, Switzerland
+ * Copyright (C) 2010 Teleal GmbH, Switzerland
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 2 of
+ * published by the Free Software Foundation, either version 3 of
  * the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -16,6 +16,12 @@
  */
 
 package org.fourthline.cling.test.gena;
+
+import static org.testng.Assert.assertEquals;
+
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.fourthline.cling.mock.MockUpnpService;
 import org.fourthline.cling.model.gena.CancelReason;
@@ -30,12 +36,6 @@ import org.fourthline.cling.model.meta.RemoteService;
 import org.fourthline.cling.model.state.StateVariableValue;
 import org.fourthline.cling.test.data.SampleData;
 import org.testng.annotations.Test;
-
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.testng.Assert.assertEquals;
 
 
 public class EventXMLProcessingTest {

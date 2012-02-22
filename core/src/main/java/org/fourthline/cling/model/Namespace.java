@@ -66,7 +66,7 @@ public class Namespace {
     public static final String CONTROL = "/action";
     public static final String EVENTS = "/event";
     public static final String DESCRIPTOR_FILE = "/desc.xml";
-    public static final String CALLBACK_FILE = "/cb.xml";
+    public static final String CALLBACK_FILE = "/cb"; // (was previously cb.xml. Do not have '.' in string because Onkyo receiver percent encode it
 
     final protected URI basePath;
 
@@ -173,7 +173,9 @@ public class Namespace {
     }
 
     public boolean isEventCallbackPath(URI uri) {
-        return uri.toString().endsWith(Namespace.CALLBACK_FILE);
+    	// workaround Onkyo bug with garbage trailing chars in the path part of the uri:
+    	// /dev/9bb022aa-e922-aab9-682b-aa09e9b9e059/svc/upnp-org/RenderingControl/event/cb192%2e168%2e10%2e38
+    	return uri.getPath().contains(EVENTS + Namespace.CALLBACK_FILE);
     }
 
     public Resource[] getResources(Device device) throws ValidationException {

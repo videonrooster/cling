@@ -26,6 +26,8 @@ import java.net.URL;
  * @author Christian Bauer
  */
 public class StreamRequestMessage extends UpnpMessage<UpnpRequest> {
+	
+	private String localAddress;
 
     public StreamRequestMessage(StreamRequestMessage source) {
         super(source);
@@ -72,5 +74,17 @@ public class StreamRequestMessage extends UpnpMessage<UpnpRequest> {
     public URI getUri() {
         return getOperation().getURI();
     }
+    
+    public void setUri(URI uri) {
+        getOperation().setUri(uri);
+    }
+
+	public void setLocalAddress(String localAddress) {
+		this.localAddress = localAddress;
+	}
+	
+	public String getLocalAddress() {
+		return localAddress;
+	}
     
 }

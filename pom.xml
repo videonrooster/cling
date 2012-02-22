@@ -9,17 +9,17 @@
     <groupId>org.fourthline.cling</groupId>
     <artifactId>cling</artifactId>
     <packaging>pom</packaging>
-    <version>2.0-SNAPSHOT</version>
+    <version>2.0-SNAPSHOT-bb</version>
 
     <modules>
         <module>core</module>
-        <module>workbench</module>
-        <module>website</module>
-        <module>distribution</module>
+<!--         <module>workbench</module> -->
+<!--         <module>website</module> -->
+<!--         <module>distribution</module> -->
         <module>support</module>
-        <module>mediarenderer</module>
-        <module>bridge</module>
-        <module>osgi</module>
+<!--         <module>mediarenderer</module> -->
+<!--         <module>bridge</module> -->
+<!--         <module>osgi</module> -->
     </modules>
 
     <!-- ##################################################################################################### -->
@@ -68,7 +68,7 @@
         <maven.compiler.source>6</maven.compiler.source>
         <maven.compiler.target>6</maven.compiler.target>
 
-        <seamless.version>1.0-SNAPSHOT</seamless.version>
+        <seamless.version>1.0-SNAPSHOT-bb</seamless.version>
         <testng.version>6.2</testng.version>
         <apache.httpcomponents.version>4.0.1</apache.httpcomponents.version>
         <android.version>2.1_r1</android.version>
@@ -78,7 +78,7 @@
         <servlet.api.version>2.5</servlet.api.version>
         <resteasy.version>2.0.1.GA</resteasy.version>
         <slf4j.version>1.5.10</slf4j.version>
-        <slf4j.bridge.version>1.5.11</slf4j.bridge.version>
+        <slf4j.bridge.version>1.6.2</slf4j.bridge.version>
         <jna.version>3.2.5</jna.version>
         <gstreamer.version>1.4</gstreamer.version>
         <args4j.version>2.0.12</args4j.version>

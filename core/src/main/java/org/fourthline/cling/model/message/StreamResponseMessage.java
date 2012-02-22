@@ -17,6 +17,8 @@
 
 package org.fourthline.cling.model.message;
 
+import java.io.InputStream;
+
 import org.fourthline.cling.model.message.header.ContentTypeHeader;
 import org.fourthline.cling.model.message.header.UpnpHeader;
 import org.seamless.util.MimeType;
@@ -76,5 +78,13 @@ public class StreamResponseMessage extends UpnpMessage<UpnpResponse> {
     public StreamResponseMessage(byte[] body, MimeType mimeType) {
         this(body, new ContentTypeHeader(mimeType));
     }
+    
+    public StreamResponseMessage(InputStream body, MimeType mimeType, long contentLength) {
+    	 super(new UpnpResponse(UpnpResponse.Status.OK),BodyType.STREAM, body);
+    	 getHeaders().add(UpnpHeader.Type.CONTENT_TYPE, new ContentTypeHeader(mimeType));
+    	 this.contentLength = contentLength;
+    }
+
+	
 
 }

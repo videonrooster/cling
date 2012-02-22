@@ -57,7 +57,7 @@ public abstract class Device<DI extends DeviceIdentity, D extends Device, S exte
 
     // Package mutable state
     private D parentDevice;
-
+    
     public Device(DI identity) throws ValidationException {
         this(identity, null, null, null, null, null);
     }

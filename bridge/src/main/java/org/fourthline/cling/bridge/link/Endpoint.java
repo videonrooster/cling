@@ -17,8 +17,6 @@
 
 package org.fourthline.cling.bridge.link;
 
-import org.fourthline.cling.bridge.auth.AuthCredentials;
-
 import java.net.URL;
 
 /**
@@ -28,35 +26,39 @@ public class Endpoint {
 
     final protected String id;
     final protected URL callback;
-    final AuthCredentials credentials;
-    final boolean localOrigin;
+    final protected Object userObject;
 
-    public Endpoint(String id, URL callback, boolean localOrigin, AuthCredentials credentials) {
-        this.id = id;
-        this.callback = callback;
-        this.credentials = credentials;
-        this.localOrigin = localOrigin;
+    public Endpoint(String id, URL callback) {
+    	this(id, callback, null);
     }
 
+    public Endpoint(String id, URL callback, Object userObject) {
+        this.id = id;
+        this.callback = callback;
+    	this.userObject = userObject;
+    }
+    
+    public Endpoint(String id) {
+    	this(id, null);
+    }
+
+    
     public String getId() {
         return id;
     }
 
+    public Object getUserObject() {
+    	return userObject;
+    	
+    }
+    
     public URL getCallback() {
         return callback;
-    }
-
-    public AuthCredentials getCredentials() {
-        return credentials;
     }
 
     public String getCallbackString() {
         String callbackURL = getCallback().toString();
         return (callbackURL.endsWith("/") ? callbackURL.substring(0, callbackURL.length()-1) : callbackURL);
-    }
-
-    public boolean isLocalOrigin() {
-        return localOrigin;
     }
 
     @Override
@@ -66,8 +68,7 @@ public class Endpoint {
 
         Endpoint endpoint = (Endpoint) o;
 
-        if (localOrigin != endpoint.localOrigin) return false;
-        if (!callback.equals(endpoint.callback)) return false;
+        if (callback == null || !callback.equals(endpoint.callback)) return false;
         if (!id.equals(endpoint.id)) return false;
 
         return true;
@@ -76,13 +77,14 @@ public class Endpoint {
     @Override
     public int hashCode() {
         int result = id.hashCode();
+        if(callback != null) {
         result = 31 * result + callback.hashCode();
-        result = 31 * result + (localOrigin ? 1 : 0);
+        }
         return result;
     }
 
     @Override
     public String toString() {
-        return "(" + getClass().getSimpleName() + ") ID: " + getId() + ", local origin: " + isLocalOrigin() + ", callback: " + getCallback() + ", credentials: " + getCredentials();
+        return "(" + getClass().getSimpleName() + ") ID: " + getId() + ", callback: " + (callback == null ? "none" : callback);
     }
 }

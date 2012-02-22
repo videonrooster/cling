@@ -84,6 +84,7 @@ public class DatagramIOImpl implements DatagramIO<DatagramIOConfigurationImpl> {
             // back via UDP unicast to port 1900... so we use an ephemeral port
             log.info("Creating bound socket (for datagram input/output) on: " + bindAddress);
             localAddress = new InetSocketAddress(bindAddress, 0);
+
             socket = new MulticastSocket(localAddress);
             socket.setTimeToLive(configuration.getTimeToLive());
             socket.setReceiveBufferSize(262144); // Keep a backlog of incoming datagrams if we are not fast enough
@@ -155,7 +156,8 @@ public class DatagramIOImpl implements DatagramIO<DatagramIOConfigurationImpl> {
         } catch (RuntimeException ex) {
             throw ex;
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+        	log.warning("Exception sending datagram to: " + datagram.getAddress() + ": " + ex);
+        	throw new RuntimeException(ex);
         }
     }
 }

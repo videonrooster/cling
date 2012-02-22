@@ -36,8 +36,11 @@ public class ServerClientTokens {
 
     private String osName  =  null;
     private String osVersion = null;
-    private String productName = Constants.PRODUCT_TOKEN_NAME;
-    private String productVersion = Constants.PRODUCT_TOKEN_VERSION;
+    private String productName = UserConstants.PRODUCT_TOKEN_NAME;
+    private String productVersion = UserConstants.PRODUCT_TOKEN_VERSION;
+
+
+
 
     public ServerClientTokens() {
         initOSVariables();

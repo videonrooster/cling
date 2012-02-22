@@ -196,7 +196,8 @@ import java.net.URI;
 })
 public abstract class AbstractAVTransportService implements LastChangeDelegator {
 
-    @UpnpStateVariable(eventMaximumRateMilliseconds = 200)
+    //@UpnpStateVariable(eventMaximumRateMilliseconds = 200)
+	@UpnpStateVariable
     final private LastChange lastChange;
     final protected PropertyChangeSupport propertyChangeSupport;
 

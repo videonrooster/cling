@@ -1,11 +1,15 @@
 package example.localservice;
 
-import example.binarylight.BinaryLightSampleData;
-import example.controlpoint.EventSubscriptionTest;
+import static org.testng.Assert.assertEquals;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.fourthline.cling.controlpoint.SubscriptionCallback;
 import org.fourthline.cling.mock.MockUpnpService;
 import org.fourthline.cling.model.gena.CancelReason;
 import org.fourthline.cling.model.gena.GENASubscription;
+import org.fourthline.cling.model.gena.RemoteGENASubscription;
 import org.fourthline.cling.model.message.StreamResponseMessage;
 import org.fourthline.cling.model.message.UpnpResponse;
 import org.fourthline.cling.model.meta.LocalDevice;
@@ -14,10 +18,8 @@ import org.fourthline.cling.test.data.SampleData;
 import org.seamless.util.Reflections;
 import org.testng.annotations.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.testng.Assert.assertEquals;
+import example.binarylight.BinaryLightSampleData;
+import example.controlpoint.EventSubscriptionTest;
 
 /**
  * Providing events on service state changes
@@ -116,6 +118,14 @@ public class EventProviderTest extends EventSubscriptionTest {
                 testAssertions.add(false);
             }
 
+			@Override
+			protected void invalidXMLException(
+					RemoteGENASubscription remoteGENASubscription, String xml,
+					Exception e) {
+				// TODO Auto-generated method stub
+				
+			}
+
         };
 
         upnpService.getControlPoint().execute(callback);
@@ -206,6 +216,14 @@ public class EventProviderTest extends EventSubscriptionTest {
             public void eventsMissed(GENASubscription subscription, int numberOfMissedEvents) {
                 testAssertions.add(false);
             }
+
+			@Override
+			protected void invalidXMLException(
+					RemoteGENASubscription remoteGENASubscription, String xml,
+					Exception e) {
+				// TODO Auto-generated method stub
+				
+			}
 
         };
 
@@ -315,6 +333,14 @@ public class EventProviderTest extends EventSubscriptionTest {
             public void eventsMissed(GENASubscription subscription, int numberOfMissedEvents) {
                 testAssertions.add(false);
             }
+
+			@Override
+			protected void invalidXMLException(
+					RemoteGENASubscription remoteGENASubscription, String xml,
+					Exception e) {
+				// TODO Auto-generated method stub
+				
+			}
 
         };
 
