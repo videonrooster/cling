@@ -100,12 +100,23 @@ public class SendingSearch extends SendingAsync {
         }
     }
 
+    /*
     public int getBulkRepeat() {
-        return 2; // UDA 1.0 says "repeat more than once", so we do it twice
+        return 10; // UDA 1.0 says "repeat more than once", so we do it twice
     }
 
     public int getBulkIntervalMilliseconds() {
         return 100; // That should be plenty on an ethernet LAN
     }
+    */
+    
+    public int getBulkRepeat() {
+        return 5; // UDA 1.0 says "repeat more than once", so we do it twice
+    }
+
+    public int getBulkIntervalMilliseconds() {
+        return 500; // That should be plenty on an ethernet LAN
+    }
+
 
 }

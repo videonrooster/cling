@@ -19,12 +19,7 @@ package org.fourthline.cling.android;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
-import android.net.wifi.WifiManager;
 import android.util.Log;
-import org.fourthline.cling.model.Constants;
-import org.fourthline.cling.model.ModelUtil;
-import org.fourthline.cling.transport.spi.InitializationException;
-import org.fourthline.cling.transport.spi.NetworkAddressFactory;
 
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -37,6 +32,13 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.logging.Logger;
+
+import org.fourthline.cling.model.Constants;
+import org.fourthline.cling.model.ModelUtil;
+import org.fourthline.cling.transport.spi.InitializationException;
+import org.fourthline.cling.transport.spi.NetworkAddressFactory;
+
+import android.net.wifi.WifiManager;
 
 /**
  * Implementation appropriate for Android environment, avoids unavailable methods.
@@ -54,7 +56,7 @@ public class AndroidNetworkAddressFactory implements NetworkAddressFactory {
 
 
     protected NetworkInterface wifiInterface;
-    protected List<InetAddress> bindAddresses = new ArrayList();
+    protected List<InetAddress> bindAddresses = new ArrayList<InetAddress>();
 
     /**
      * Defaults to an ephemeral port.
@@ -127,6 +129,11 @@ public class AndroidNetworkAddressFactory implements NetworkAddressFactory {
     public InetAddress[] getBindAddresses() {
         return bindAddresses.toArray(new InetAddress[bindAddresses.size()]);
     }
+    
+	@Override
+	public Short getAddressNetworkPrefixLength(InetAddress inetAddress) {
+		return null;
+	}
 
     public byte[] getHardwareAddress(InetAddress inetAddress) {
         return null; // TODO: Get this from WifiInfo from WifiManager
@@ -251,5 +258,7 @@ public class AndroidNetworkAddressFactory implements NetworkAddressFactory {
         int r3 = arr[offset + 3] & 0xFF;
         return r0 + r1 + r2 + r3;
     }
+
+
 
 }

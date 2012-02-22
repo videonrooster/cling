@@ -17,33 +17,13 @@
 
 package org.fourthline.cling.transport.impl.apache;
 
-import org.apache.http.ConnectionClosedException;
-import org.apache.http.ConnectionReuseStrategy;
-import org.apache.http.HttpEntityEnclosingRequest;
-import org.apache.http.HttpException;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpResponseFactory;
-import org.apache.http.HttpServerConnection;
-import org.apache.http.HttpStatus;
-import org.apache.http.MethodNotSupportedException;
-import org.apache.http.ProtocolVersion;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.DefaultConnectionReuseStrategy;
-import org.apache.http.impl.DefaultHttpResponseFactory;
-import org.apache.http.message.BasicStatusLine;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.DefaultedHttpParams;
-import org.apache.http.params.HttpParams;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.BasicHttpProcessor;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpProcessor;
-import org.apache.http.protocol.HttpService;
-import org.apache.http.protocol.ResponseConnControl;
-import org.apache.http.protocol.ResponseContent;
-import org.apache.http.protocol.ResponseDate;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.SocketTimeoutException;
+import java.net.URI;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.fourthline.cling.model.message.StreamRequestMessage;
 import org.fourthline.cling.model.message.StreamResponseMessage;
 import org.fourthline.cling.model.message.UpnpHeaders;
@@ -53,15 +33,39 @@ import org.fourthline.cling.model.message.UpnpRequest;
 import org.fourthline.cling.protocol.ProtocolFactory;
 import org.fourthline.cling.transport.spi.UnsupportedDataException;
 import org.fourthline.cling.transport.spi.UpnpStream;
-import org.seamless.util.io.IO;
 import org.seamless.util.Exceptions;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.SocketTimeoutException;
-import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import com.bubblesoft.org.apache.http.ConnectionClosedException;
+import com.bubblesoft.org.apache.http.ConnectionReuseStrategy;
+import com.bubblesoft.org.apache.http.HttpEntity;
+import com.bubblesoft.org.apache.http.HttpEntityEnclosingRequest;
+import com.bubblesoft.org.apache.http.HttpException;
+import com.bubblesoft.org.apache.http.HttpRequest;
+import com.bubblesoft.org.apache.http.HttpResponse;
+import com.bubblesoft.org.apache.http.HttpResponseFactory;
+import com.bubblesoft.org.apache.http.HttpServerConnection;
+import com.bubblesoft.org.apache.http.HttpStatus;
+import com.bubblesoft.org.apache.http.MethodNotSupportedException;
+import com.bubblesoft.org.apache.http.ProtocolVersion;
+import com.bubblesoft.org.apache.http.entity.ByteArrayEntity;
+import com.bubblesoft.org.apache.http.entity.InputStreamEntity;
+import com.bubblesoft.org.apache.http.entity.StringEntity;
+import com.bubblesoft.org.apache.http.impl.DefaultConnectionReuseStrategy;
+import com.bubblesoft.org.apache.http.impl.DefaultHttpResponseFactory;
+import com.bubblesoft.org.apache.http.impl.DefaultHttpServerConnection;
+import com.bubblesoft.org.apache.http.message.BasicStatusLine;
+import com.bubblesoft.org.apache.http.params.BasicHttpParams;
+import com.bubblesoft.org.apache.http.params.DefaultedHttpParams;
+import com.bubblesoft.org.apache.http.params.HttpParams;
+import com.bubblesoft.org.apache.http.protocol.BasicHttpContext;
+import com.bubblesoft.org.apache.http.protocol.BasicHttpProcessor;
+import com.bubblesoft.org.apache.http.protocol.HttpContext;
+import com.bubblesoft.org.apache.http.protocol.HttpProcessor;
+import com.bubblesoft.org.apache.http.protocol.HttpService;
+import com.bubblesoft.org.apache.http.protocol.ResponseConnControl;
+import com.bubblesoft.org.apache.http.protocol.ResponseContent;
+import com.bubblesoft.org.apache.http.protocol.ResponseDate;
+import com.bubblesoft.org.apache.http.util.EntityUtils;
 
 /**
  * Implementation for Apache HTTP Components API.
@@ -182,35 +186,30 @@ public class HttpServerConnectionUpnpStream extends UpnpStream {
 
             // Headers
             requestMessage.setHeaders(new UpnpHeaders(HeaderUtil.get(httpRequest)));
+            
+            InetAddress localAddress = ((DefaultHttpServerConnection)connection).getLocalAddress();
+            if(localAddress == null) {
+            	log.warning("got HTTP request without Local Address"); 
+            } else {
+            	requestMessage.setLocalAddress(localAddress.getHostAddress());
+            }
 
             // Body
             if (httpRequest instanceof HttpEntityEnclosingRequest) {
                 log.fine("Request contains entity body, setting on UPnP message");
+                
                 HttpEntityEnclosingRequest entityEnclosingHttpRequest = (HttpEntityEnclosingRequest) httpRequest;
+                
+                HttpEntity entity = entityEnclosingHttpRequest.getEntity();
 
-                byte[] bodyBytes;
-                InputStream is = null;
-                try {
-                    is = entityEnclosingHttpRequest.getEntity().getContent();
-                    bodyBytes = IO.readBytes(is);
-                } finally {
-                    if (is != null)
-                        is.close();
-                }
-
-                if (bodyBytes.length > 0 && requestMessage.isContentTypeMissingOrText()) {
-
-                    log.fine("Request contains textual entity body, converting then setting string on message");
-                    requestMessage.setBodyCharacters(bodyBytes);
-
-                } else if (bodyBytes.length > 0) {
-
-                    log.fine("Request contains binary entity body, setting bytes on message");
-                    requestMessage.setBody(UpnpMessage.BodyType.BYTES, bodyBytes);
-
+                if (requestMessage.isContentTypeMissingOrText()) {
+                    log.fine("HTTP request message contains text entity");
+                    requestMessage.setBody(UpnpMessage.BodyType.STRING, EntityUtils.toString(entity));
                 } else {
-                    log.fine("Request did not contain entity body");
+                    log.fine("HTTP request message contains binary entity");
+                    requestMessage.setBody(UpnpMessage.BodyType.BYTES, EntityUtils.toByteArray(entity));
                 }
+                
 
             } else {
                 log.fine("Request did not contain entity body");
@@ -221,7 +220,6 @@ public class HttpServerConnectionUpnpStream extends UpnpStream {
             try {
                 responseMsg = process(requestMessage);
             } catch (RuntimeException ex) {
-
                 log.fine("Exception occured during UPnP stream processing: " + ex);
                 if (log.isLoggable(Level.FINE)) {
                     log.log(Level.FINE, "Cause: " + Exceptions.unwrap(ex), Exceptions.unwrap(ex));
@@ -258,6 +256,9 @@ public class HttpServerConnectionUpnpStream extends UpnpStream {
                 } else if (responseMsg.hasBody() && responseMsg.getBodyType().equals(UpnpMessage.BodyType.STRING)) {
                     StringEntity responseEntity = new StringEntity(responseMsg.getBodyString(), "UTF-8");
                     httpResponse.setEntity(responseEntity);
+                }  else if (responseMsg.hasBody() && responseMsg.getBodyType().equals(UpnpMessage.BodyType.STREAM)) {
+                	log.info("serving stream, len: " + responseMsg.getContentLength());
+                	httpResponse.setEntity(new InputStreamEntity(responseMsg.getInputStream(), responseMsg.getContentLength()));
                 }
 
             } else {

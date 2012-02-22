@@ -17,21 +17,33 @@
 
 package org.fourthline.cling.bridge.link;
 
-import org.jboss.resteasy.client.ClientRequest;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Set;
+import java.util.Vector;
+import java.util.logging.Logger;
+
+import org.fourthline.cling.bridge.BridgeNamespace;
 import org.fourthline.cling.bridge.BridgeUpnpService;
-import org.fourthline.cling.bridge.Constants;
 import org.fourthline.cling.bridge.link.proxy.ProxyDiscovery;
 import org.fourthline.cling.bridge.link.proxy.ProxyLocalDevice;
 import org.fourthline.cling.model.meta.LocalDevice;
 import org.fourthline.cling.model.resource.Resource;
 import org.seamless.util.Exceptions;
 
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.net.URLEncoder;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.logging.Logger;
+import com.bubblesoft.common.json.JsonScripts;
+import com.bubblesoft.org.apache.http.HttpEntity;
+import com.bubblesoft.org.apache.http.HttpResponse;
+import com.bubblesoft.org.apache.http.HttpStatus;
+import com.bubblesoft.org.apache.http.StatusLine;
+import com.bubblesoft.org.apache.http.client.HttpResponseException;
+import com.bubblesoft.org.apache.http.client.ResponseHandler;
+import com.bubblesoft.org.apache.http.client.methods.HttpDelete;
+import com.bubblesoft.org.apache.http.client.methods.HttpGet;
+import com.bubblesoft.org.apache.http.impl.client.BasicResponseHandler;
+import com.bubblesoft.org.apache.http.util.EntityUtils;
 
 /**
  * @author Christian Bauer
@@ -40,9 +52,7 @@ public class LinkManager {
 
     final private static Logger log = Logger.getLogger(LinkManager.class.getName());
 
-    public static final String FORM_CALLBACK = "callback";
-    public static final String FORM_TIMEOUT = "timeout-seconds";
-    public static final String FORM_AUTH_HASH = "auth-key";
+	//public static final String FORM_CALLBACK = "callback";
 
     final private BridgeUpnpService upnpService;
     final private ProxyDiscovery deviceDiscovery;
@@ -77,19 +87,16 @@ public class LinkManager {
         for (EndpointResource resource : getUpnpService().getRegistry().getResources(EndpointResource.class)) {
             log.fine("Deregistering and deleting on shutdown: " + resource.getModel());
             deregisterAndDelete(resource);
-            log.info("Removed link: " + resource.getModel());
+			//log.info("Removed link: " + resource.getModel());
         }
     }
 
-    synchronized boolean register(final EndpointResource resource) {
-        return register(resource, Constants.LINK_DEFAULT_TIMEOUT_SECONDS);
-    }
 
-    synchronized boolean register(final EndpointResource resource, int timeoutSeconds) {
+    synchronized boolean register(final EndpointResource resource) {
         Resource<Endpoint> existingResource = getUpnpService().getRegistry().getResource(resource.getPathQuery());
 
-        log.info("New link created: " + resource.getModel());
-        getUpnpService().getRegistry().addResource(resource, timeoutSeconds);
+		//log.info("New link created: " + resource.getModel());
+		getUpnpService().getRegistry().addResource(resource);
 
         if (existingResource == null) {
 
@@ -103,6 +110,7 @@ public class LinkManager {
                 );
             }
 
+			/*
             getUpnpService().getConfiguration().getAsyncProtocolExecutor().execute(
                     new Runnable() {
                         public void run() {
@@ -111,63 +119,69 @@ public class LinkManager {
                         }
                     }
             );
+			 */
             return true;
         }
 
         return false;
     }
 
-    synchronized public boolean registerAndPut(EndpointResource resource) {
-        return registerAndPut(resource, Constants.LINK_DEFAULT_TIMEOUT_SECONDS);
+	protected String getRemoteProxyURL(Endpoint endpoint, String udn) {
+		return endpoint.getCallbackString() + new BridgeNamespace().getProxyPath(endpoint.getId(), udn);
     }
 
-    synchronized public boolean registerAndPut(final EndpointResource resource, int timeoutSeconds) {
+	/////// ENDPOINT REGISTER
+	
+	public static interface RegisterAndGetProgress {
+		public void onLoadNewDevice(String deviceFriendlyName);
+		public boolean isAborted();
+	}
 
-        log.fine("Storing in registry: " + resource.getModel());
-        getUpnpService().getRegistry().addResource(resource, timeoutSeconds);
+	synchronized public boolean registerAndGet(final EndpointResource resource, RegisterAndGetProgress progess) {
 
-        boolean created = false;
+		getUpnpService().getRegistry().addResource(resource);
+
         boolean failed = false;
+
+		String requestURL = resource.getRemoteEndpointURL().toString();
+
+
+		String body = null;
+
         try {
-            String requestURL = resource.getRemoteEndpointURL().toString();
-            log.fine("Sending PUT to remote: " + requestURL);
-            ClientRequest request = new ClientRequest(requestURL);
 
-            StringBuilder body = new StringBuilder();
-            body.append(FORM_CALLBACK)
-                    .append("=")
-                    .append(URLEncoder.encode(resource.getLocalEndpointURL().toString(), "UTF-8"));
-            body.append("&");
-            body.append(FORM_TIMEOUT)
-                    .append("=")
-                    .append(Integer.toString(timeoutSeconds));
-            body.append("&");
-            body.append(FORM_AUTH_HASH)
-                    .append("=")
-                    .append(getUpnpService().getConfiguration().getAuthManager().getLocalCredentials());
-            request.body(MediaType.APPLICATION_FORM_URLENCODED, body.toString());
+			HttpGet request = new HttpGet(requestURL);
 
-            getUpnpService().getConfiguration().getAuthManager().write(resource.getModel().getCredentials(), request);
-            Response response = request.put();
+			body = 
+					getUpnpService().getConfiguration().getHttpClient().execute(request,
+							new ResponseHandler<String>() {
 
-            log.fine("Received response: " + response.getStatus());
+						@Override
+						public String handleResponse(HttpResponse response) throws HttpResponseException, IOException	 {
+							StatusLine statusLine = response.getStatusLine();
 
-            if (response.getStatus() != Response.Status.OK.getStatusCode() &&
-                    response.getStatus() != Response.Status.CREATED.getStatusCode()) {
+							int responseCode = statusLine.getStatusCode();
 
-                log.info("Remote '" + resource.getModel() + "' notification failed: " + response.getStatus());
+							if (responseCode != HttpStatus.SC_OK && responseCode != HttpStatus.SC_CREATED) {
+								//log.info("Remote '" + resource.getModel() + "' notification failed: " + responseCode);
+								throw new HttpResponseException(statusLine.getStatusCode(), statusLine.getReasonPhrase()); 
+							} else if (responseCode == HttpStatus.SC_CREATED) {
+								HttpEntity entity = response.getEntity();
+								return entity == null ? null : EntityUtils.toString(entity);
+							}
+							return null; // link already created: HttpStatus.SC_OK
+						}
+					});
+
+		} catch (Exception e) {
+			log.info("Remote '" + resource.getModel() + "' notification failed: " + Exceptions.unwrap(e));
+			log.info(Exceptions.unwrap(e).toString());
+			e.printStackTrace();
                 failed = true;
-
-            } else if (response.getStatus() == Response.Status.CREATED.getStatusCode()) {
-                created = true;
             }
 
-        } catch (Exception ex) {
-            log.info("Remote '" + resource.getModel() + "' notification failed: " + Exceptions.unwrap(ex));
-            failed = true;
-        }
+		if (body != null) {
 
-        if (created) {
             log.info("New link created with local origin: " + resource.getModel());
 
             for (final LinkManagementListener listener : listeners) {
@@ -180,14 +194,32 @@ public class LinkManager {
                 );
             }
 
-            getUpnpService().getConfiguration().getAsyncProtocolExecutor().execute(
-                    new Runnable() {
-                        public void run() {
-                            log.fine("Asynchronously sending current devices to new remote: " + resource.getModel());
-                            getDeviceDiscovery().putCurrentDevices(resource.getModel());
+			log.severe(body);
+
+			LinkedHashMap container = JsonScripts.parseJsonScript(body);
+			if(container == null) {
+				failed = true;
+
+			} else {
+				Vector<HashMap> devices = (Vector)container.get("devices");
+
+				for(HashMap device : devices) {
+					String friendlyName = (String)device.get("friendlyName");
+					String udn = (String)device.get("udn");
+					
+					if(progess != null) {
+						if(progess.isAborted()) {
+							log.warning("registerAndGet aborted");
+							failed = true;
+							break;
+						}
+						progess.onLoadNewDevice(friendlyName);
+					}
+					
+					addProxyLocalDevice(resource, udn);
                         }
                     }
-            );
+
         }
 
         if (failed) {
@@ -197,10 +229,46 @@ public class LinkManager {
         return !failed;
     }
 
+
+
+	private void addProxyLocalDevice(EndpointResource resource, String udn) {
+
+		String requestURL = getRemoteProxyURL(resource.getModel(), udn);
+		log.warning("Sending GET to remote: " + requestURL);
+
+		String body;
+		try {
+			HttpGet request = new HttpGet(requestURL);
+
+			body = getUpnpService().getConfiguration().getHttpClient().execute(request, new BasicResponseHandler());
+
+			if(body == null) {
+				log.severe("failed to read proxy descriptor: no entity");
+				return ;
+			}
+		} catch (Exception e) {
+			log.warning("failed to execute request: " + e);
+			return ;
+		}
+
+		try {
+			ProxyLocalDevice proxy = getUpnpService().getConfiguration().getCombinedDescriptorBinder().read(body, resource.getModel());
+			proxy.setEndpoint(resource.getModel());
+			log.info("Received device proxy: " + proxy);
+			getUpnpService().getRegistry().addDevice(proxy);
+		} catch (IOException e) {
+			log.severe("failed to read proxy descriptor: " + e);
+		}
+
+	}
+
+	/////// ENDPOINT UNREGISTER
+
+	// called on client
     synchronized protected boolean deregister(final EndpointResource resource) {
         boolean removed = getUpnpService().getRegistry().removeResource(resource);
         if (removed) {
-            log.info("Link removed: " + resource.getModel());
+			//log.info("Link removed: " + resource.getModel());
 
             for (final LinkManagementListener listener : listeners) {
                 getUpnpService().getConfiguration().getRegistryListenerExecutor().execute(
@@ -216,7 +284,7 @@ public class LinkManager {
                 if (localDevice instanceof ProxyLocalDevice) {
                     ProxyLocalDevice proxyLocalDevice = (ProxyLocalDevice) localDevice;
                     if (proxyLocalDevice.getIdentity().getEndpoint().equals(resource.getModel())) {
-                        log.info("Removing endpoint's proxy device from registry: " + proxyLocalDevice);
+						//log.info("Removing endpoint's proxy device from registry: " + proxyLocalDevice);
                         getUpnpService().getRegistry().removeDevice(proxyLocalDevice);
                     }
                 }
@@ -225,16 +293,21 @@ public class LinkManager {
         return removed;
     }
 
+	// called on client
     synchronized public void deregisterAndDelete(EndpointResource resource) {
         deregister(resource);
         try {
+			/*
             ClientRequest request = new ClientRequest(resource.getRemoteEndpointURL().toString());
-            getUpnpService().getConfiguration().getAuthManager().write(resource.getModel().getCredentials(), request);
             Response response = request.delete();
 
             if (response.getStatus() != Response.Status.OK.getStatusCode()) {
                 log.info("Remote '" + resource.getModel() + "' deletion failed: " + response.getStatus());
             }
+			 */
+
+			HttpDelete request = new HttpDelete(resource.getRemoteEndpointURL().toString());
+			getUpnpService().getConfiguration().getHttpClient().execute(request, new BasicResponseHandler());
 
         } catch (Exception ex) {
             log.info("Remote '" + resource.getModel() + "' deletion failed: " + Exceptions.unwrap(ex));

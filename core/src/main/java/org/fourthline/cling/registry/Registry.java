@@ -20,6 +20,7 @@ package org.fourthline.cling.registry;
 import org.fourthline.cling.UpnpService;
 import org.fourthline.cling.UpnpServiceConfiguration;
 import org.fourthline.cling.model.resource.Resource;
+import org.fourthline.cling.model.resource.ResourceProcessor;
 import org.fourthline.cling.model.ServiceReference;
 import org.fourthline.cling.model.meta.Device;
 import org.fourthline.cling.model.meta.LocalDevice;
@@ -324,7 +325,8 @@ public interface Registry {
      * @throws IllegalArgumentException If the given URI was absolute, only path and query are allowed.
      */
     public Resource getResource(URI pathQuery) throws IllegalArgumentException;
-
+    
+    
     /**
      * @param <T> The required subtype of the {@link org.fourthline.cling.model.resource.Resource}.
      * @param pathQuery The path and optional query string of the resource's
@@ -346,6 +348,15 @@ public interface Registry {
      * @return Any registered resource that matches the given subtype.
      */
     public <T extends Resource> Collection<T> getResources(Class<T> resourceType);
+
+    /**
+     * Enable/Disable advertising of a local device on the LAN
+     * 
+     * @param localDevice The local device to operate
+     * @param isAdvertising true to enable advertising, false otherwise
+	 */
+    public void setLocalDeviceAdvertising(LocalDevice localDevice, boolean isAdvertising);
+
 
     // #################################################################################################
 
@@ -405,6 +416,12 @@ public interface Registry {
      * Called internally by the UPnP stack, during GENA protocol execution.
      */
     public void unlockRemoteSubscriptions();
+    
+   
+    
+	public void setResourceMissingProcessor(ResourceProcessor resourceProcessor);
+	
+	public ResourceProcessor getResourceMissingProcessor();
 
     // #################################################################################################
 

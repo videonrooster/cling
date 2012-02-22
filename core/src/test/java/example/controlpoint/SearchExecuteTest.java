@@ -176,7 +176,8 @@ public class SearchExecuteTest {
     }
 
     protected void assertMessages(MockUpnpService upnpService, UpnpHeader header) throws Exception {
-        Assert.assertEquals(upnpService.getOutgoingDatagramMessages().size(), 2);
+    	// standard cling sends 2 search messages. bb-cling sends 5 messages
+        Assert.assertEquals(upnpService.getOutgoingDatagramMessages().size(), 5);
         for (UpnpMessage msg : upnpService.getOutgoingDatagramMessages()) {
             assertSearchMessage(msg, header);
         }

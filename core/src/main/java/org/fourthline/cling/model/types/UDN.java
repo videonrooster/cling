@@ -91,8 +91,13 @@ public class UDN {
         StringBuilder systemSalt = new StringBuilder();
 
         try {
-            java.net.InetAddress i = java.net.InetAddress.getLocalHost();
-            systemSalt.append(i.getHostName()).append(i.getHostAddress());
+        	if(ModelUtil.ANDROID_RUNTIME) {
+        		// bug: I've seen InetAddress.getLocalHost() block *forever* on Android, until device is rebooted
+        		throw new Exception("Android sucks");
+        	} else {
+        		java.net.InetAddress i = java.net.InetAddress.getLocalHost();
+            	systemSalt.append(i.getHostName()).append(i.getHostAddress());
+        	}
         } catch (Exception ex) {
             // Could not find local host name, try to get the MAC address of loopback interface
             try {

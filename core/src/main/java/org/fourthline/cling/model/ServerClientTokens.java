@@ -34,32 +34,17 @@ public class ServerClientTokens {
     private int majorVersion = 1;
     private int minorVersion = 0;
 
-    private String osName  =  null;
-    private String osVersion = null;
-    private String productName = Constants.PRODUCT_TOKEN_NAME;
-    private String productVersion = Constants.PRODUCT_TOKEN_VERSION;
+    private String osName  =  System.getProperty("os.name").replaceAll("[^a-zA-Z0-9\\.\\-_]", "");
+    private String osVersion = System.getProperty("os.version").replaceAll("[^a-zA-Z0-9\\.\\-_]", "");
+    private String productName = UserConstants.PRODUCT_TOKEN_NAME;
+    private String productVersion = UserConstants.PRODUCT_TOKEN_VERSION;
 
     public ServerClientTokens() {
-        initOSVariables();
     }
 
-    private void initOSVariables(){
-        try {
-            osName = System.getProperty("os.name").replaceAll("[^a-zA-Z0-9\\.\\-_]", "");
-        }catch(Exception ex){
-            osName = "Linux";
-        }
-        try {
-            osVersion = System.getProperty("os.version").replaceAll("[^a-zA-Z0-9\\.\\-_]", "");
-        }catch(Exception ex){
-            osVersion = "2.6.35";
-        }
-    }
-    
     public ServerClientTokens(int majorVersion, int minorVersion) {
         this.majorVersion = majorVersion;
         this.minorVersion = minorVersion;
-        initOSVariables();
     }
 
     public ServerClientTokens(int majorVersion, int minorVersion, String osName, String osVersion, String productName, String productVersion) {

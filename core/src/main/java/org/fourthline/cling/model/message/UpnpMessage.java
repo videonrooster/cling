@@ -17,10 +17,12 @@
 
 package org.fourthline.cling.model.message;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+
 import org.fourthline.cling.model.message.header.ContentTypeHeader;
 import org.fourthline.cling.model.message.header.UpnpHeader;
-
-import java.io.UnsupportedEncodingException;
 
 /**
  * A non-streaming message, the interface between the transport layer and the protocols.
@@ -41,7 +43,7 @@ import java.io.UnsupportedEncodingException;
 public abstract class UpnpMessage<O extends UpnpOperation> {
 
     public static enum BodyType {
-        STRING, BYTES
+        STRING, BYTES, STREAM
     }
 
     private int udaMajorVersion = 1;
@@ -188,6 +190,18 @@ public abstract class UpnpMessage<O extends UpnpOperation> {
 
     public boolean hasHostHeader() {
         return getHeaders().getFirstHeader(UpnpHeader.Type.HOST) != null;
+    }
+    
+    protected long contentLength = -1;
+    
+    public long getContentLength() {
+    	if(BodyType.STREAM.equals(getBodyType())) return contentLength;
+    	return getBodyBytes() != null ? getBodyBytes().length : -1;
+    }
+    
+    public InputStream getInputStream() {
+    	if(BodyType.STREAM.equals(getBodyType())) return (InputStream)body;
+    	return new ByteArrayInputStream(getBodyBytes()); 
     }
 
     @Override

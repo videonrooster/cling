@@ -17,7 +17,15 @@
 
 package org.fourthline.cling.protocol;
 
+import java.net.URI;
+import java.net.URL;
+import java.util.logging.Logger;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
 import org.fourthline.cling.UpnpService;
+import org.fourthline.cling.model.Namespace;
 import org.fourthline.cling.model.action.ActionInvocation;
 import org.fourthline.cling.model.gena.LocalGENASubscription;
 import org.fourthline.cling.model.gena.RemoteGENASubscription;
@@ -47,11 +55,6 @@ import org.fourthline.cling.protocol.sync.SendingEvent;
 import org.fourthline.cling.protocol.sync.SendingRenewal;
 import org.fourthline.cling.protocol.sync.SendingSubscribe;
 import org.fourthline.cling.protocol.sync.SendingUnsubscribe;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import java.net.URL;
-import java.util.logging.Logger;
 
 /**
  * Default implementation, directly instantiates the appropriate protocols.
@@ -155,6 +158,21 @@ public class ProtocolFactoryImpl implements ProtocolFactory {
 
         } else if (getUpnpService().getConfiguration().getNamespace().isEventCallbackPath(message.getUri())) {
 
+        	// workaround Onkyo bug with garbage trailing chars:
+        	// /dev/9bb022aa-e922-aab9-682b-aa09e9b9e059/svc/upnp-org/RenderingControl/event/cb192%2e168%2e10%2e38 is sent
+        	// instead of: /dev/9bb022aa-e922-aab9-682b-aa09e9b9e059/svc/upnp-org/RenderingControl/event/cb
+        	
+        	String uri = message.getUri().toString();
+        	if(!uri.endsWith(Namespace.CALLBACK_FILE)) {
+        		log.warning("trailing garbage characters detected at the end of sub event URL");
+        		int pos = uri.indexOf(Namespace.CALLBACK_FILE);
+        		if(pos != -1) {
+        			uri = uri.substring(0, pos + Namespace.CALLBACK_FILE.length());
+        			log.warning("fixed bad sub event URL");
+        			message.setUri(URI.create(uri));
+        		}
+        	}
+        	
             if (message.getOperation().getMethod().equals(UpnpRequest.Method.NOTIFY))
                 return new ReceivingEvent(getUpnpService(), message);
 

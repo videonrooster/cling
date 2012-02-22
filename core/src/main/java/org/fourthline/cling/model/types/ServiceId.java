@@ -17,10 +17,11 @@
 
 package org.fourthline.cling.model.types;
 
-import org.fourthline.cling.model.Constants;
-
-import java.util.regex.Pattern;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.fourthline.cling.model.Constants;
 
 /**
  * Represents a service identifer, for example <code>urn:my-domain-namespace:serviceId:MyService123</code>
@@ -29,77 +30,87 @@ import java.util.regex.Matcher;
  */
 public class ServiceId {
 
-    public static final Pattern PATTERN =
-            Pattern.compile("urn:(" + Constants.REGEX_NAMESPACE + "):serviceId:(" + Constants.REGEX_ID+ ")");
+	final private static Logger log = Logger.getLogger(ServiceId.class.getName());
 
-    private String namespace;
-    private String id;
+	public static final Pattern PATTERN =
+			Pattern.compile("urn:(" + Constants.REGEX_NAMESPACE + "):serviceId:(" + Constants.REGEX_ID+ ")");
 
-    public ServiceId(String namespace, String id) {
-        if (namespace != null && !namespace.matches(Constants.REGEX_NAMESPACE)) {
-            throw new IllegalArgumentException("Service ID namespace contains illegal characters");
-        }
-        this.namespace = namespace;
+	private String namespace;
+	private String id;
 
-        if (id != null && !id.matches(Constants.REGEX_ID)) {
-            throw new IllegalArgumentException("Service ID suffix too long (64) or contains illegal characters");
-        }
-        this.id = id;
-    }
+	public ServiceId(String namespace, String id) {
+		if (namespace != null && !namespace.matches(Constants.REGEX_NAMESPACE)) {
+			throw new IllegalArgumentException("Service ID namespace contains illegal characters");
+		}
+		this.namespace = namespace;
 
-    public String getNamespace() {
-        return namespace;
-    }
+		if (id != null && !id.matches(Constants.REGEX_ID)) {
+			throw new IllegalArgumentException("Service ID suffix too long (64) or contains illegal characters");
+		}
+		this.id = id;
+	}
 
-    public String getId() {
-        return id;
-    }
+	public String getNamespace() {
+		return namespace;
+	}
 
-    public static ServiceId valueOf(String s) throws InvalidValueException {
+	public String getId() {
+		return id;
+	}
 
-        ServiceId serviceId = null;
+	public static ServiceId valueOf(String s) throws InvalidValueException {
 
-        // First try UDAServiceId parse
-        try {
-            serviceId = UDAServiceId.valueOf(s);
-        } catch (Exception ex) {
-            // Ignore
-        }
+		ServiceId serviceId = null;
 
-        // Now try a generic ServiceId parse
-        if (serviceId == null) {
-            Matcher matcher = ServiceId.PATTERN.matcher(s);
-            if (matcher.matches()) {
-                return new ServiceId(matcher.group(1), matcher.group(2));
-            } else {
-                throw new InvalidValueException("Can't parse Service ID string (namespace/id): " + s);
-            }
-        }
-        return serviceId;
-    }
+		// First try UDAServiceId parse
+		try {
+			serviceId = UDAServiceId.valueOf(s);
+		} catch (Exception ex) {
+			// Ignore
+		}
 
-    @Override
-    public String toString() {
-        return "urn:" + getNamespace() + ":serviceId:" + getId();
-    }
+		// Now try a generic ServiceId parse
+		if (serviceId == null) {
+			Matcher matcher = ServiceId.PATTERN.matcher(s);
+			if (matcher.matches()) {
+				return new ServiceId(matcher.group(1), matcher.group(2));
+			} else {
+				// hack for PS Audio Bridge which send a non compliant string
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || !(o instanceof ServiceId)) return false;
+				String tokens[] = s.split("[:]");
+				if(tokens.length != 4) {
+					throw new InvalidValueException("Can't parse Service ID string (namespace/id): " + s);
+				}
+				
+				log.warning("Invalid service ID, but still tokenizable ");
+				return new ServiceId(tokens[1], tokens[3]);
+			}
+		}
+		return serviceId;
+	}
 
-        ServiceId serviceId = (ServiceId) o;
+	@Override
+	public String toString() {
+		return "urn:" + getNamespace() + ":serviceId:" + getId();
+	}
 
-        if (!id.equals(serviceId.id)) return false;
-        if (!namespace.equals(serviceId.namespace)) return false;
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || !(o instanceof ServiceId)) return false;
 
-        return true;
-    }
+		ServiceId serviceId = (ServiceId) o;
 
-    @Override
-    public int hashCode() {
-        int result = namespace.hashCode();
-        result = 31 * result + id.hashCode();
-        return result;
-    }
+		if (!id.equals(serviceId.id)) return false;
+		if (!namespace.equals(serviceId.namespace)) return false;
+
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = namespace.hashCode();
+		result = 31 * result + id.hashCode();
+		return result;
+	}
 }

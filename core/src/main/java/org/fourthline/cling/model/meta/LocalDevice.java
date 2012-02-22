@@ -47,6 +47,8 @@ import java.util.List;
 public class LocalDevice extends Device<DeviceIdentity, LocalDevice, LocalService> {
 
     final private DeviceDetailsProvider deviceDetailsProvider;
+    
+    private boolean isAdvertising = false;
 
     public LocalDevice(DeviceIdentity identity) throws ValidationException {
         super(identity);
@@ -310,6 +312,14 @@ public class LocalDevice extends Device<DeviceIdentity, LocalDevice, LocalServic
     @Override
     public LocalDevice findDevice(UDN udn) {
         return find(udn, this);
+    }
+    
+    public void setAdvertising(boolean b) {
+    	isAdvertising = b;
+    }
+    
+    public boolean isAdvertising() {
+    	return isAdvertising;
     }
 
 }

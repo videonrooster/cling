@@ -102,6 +102,14 @@ public class PositionInfo {
         this.trackMetaData = trackMetaData;
         this.trackURI = trackURI;
     }
+    
+    public void setTrackDuration(String trackDuration) {
+    	this.trackDuration = trackDuration;
+    }
+    
+    public void setRelTime(String relTime) {
+    	this.relTime = relTime;
+    }
 
     public UnsignedIntegerFourBytes getTrack() {
         return track;

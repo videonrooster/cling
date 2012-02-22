@@ -1,0 +1,63 @@
+- added callback interceptor to execute pre and post code around action execution:
+
+	Action action = service.getAction("Browse");
+	action.setActionCallbackInterceptor(new ActionCallbackInterceptor() {
+			@Override
+			public void preExecute(ActionInvocation actionInvocation) {
+				log.info("before " + actionInvocation.getAction().getName());
+			}
+
+			@Override
+			public void postExecute(ActionInvocation actionInvocation) {
+				log.info("after " + actionInvocation.getAction().getName());
+			}
+		});
+		
+		
+		
+- added alternate Android implementation for SwitchableRouter, UpnpServiceConfiguration and NetworkFactory that
+works with all connectivity  types (mobile, wifi, ethernet, ...)
+
+
+- added SubscriptionCallback.invalidXMLException() callback to notify of invalid XML received
+
+- ActionInvocation can be associated the User-Agent and remote address
+
+- fix: IntegerDataType.valueOf(s) return getMaxValue() if s is "NOT_IMPLEMENTED" (some devices send this forbidden value instead of max value, as per spec)
+
+- hack: relaxed ServiceId.valueof() for bogus value sent by PS Audio Bridge
+
+- added UserConstants.java to override PRODUCT_TOKEN_NAME and PRODUCT_TOKEN_VERSION
+
+- change: Namespace.CALLBACK_FILE is /cb instead /cb.xml to workaround Onkyo receiver bug that will percent encode '.'
+
+- added Registry.setLocalDeviceAdvertising() to toggle advertising on the LAN of a local device on/off
+
+- added PullGENAEventProcessor, RecoverGENAEventProcessor. 
+
+The pull processor uses a XML Pull Parser and is more lenient in parsing than the default impl DOM processor
+
+the recover processor specialize the pull processor to handle recovery of badly encoded XML. This was mainly implemented to handle LastChange SOAP events that are broken
+in every possible way by manufacturers. it will try very hard to recover the most data as possible, event incomplete.
+
+Both processor pass succesfully EventXMLProcessingTest. Furthermore RecoverGENAEventProcessor passes 
+more tests in EventXMLProcessingRecoveryTest dealing with real-life broken XML samples (tests/resources/brokenxml).
+
+- added  PullSOAPActionProcessor, RecoverSOAPActionProcessor. 
+
+the pull processor:
+
+- avoid to use a 800Kb replacement DOM parser on Android > 3.0 due to this bug: http://code.google.com/p/android/issues/detail?id=18102.
+- allow action output parameters in any order (very frequent with GetProtocolInfoResponse, where Source and Sink in inverted).
+- is more lenient with parsing, look only for the required XML tags
+
+The recover processor is a specialization of the pull processor that attempts to fix XML entity encoding issues.
+
+   
+- modified SOAPActionProcessorImpl to allow action output parameters in any order
+ 
+- NetworkAddressFactoryImpl: ignore link-local addresses
+
+- added NetworkAddressFactory.getAddressNetworkPrefixLength()
+
+ 

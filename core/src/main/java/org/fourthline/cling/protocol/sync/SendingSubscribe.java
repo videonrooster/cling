@@ -17,14 +17,16 @@
 
 package org.fourthline.cling.protocol.sync;
 
+import java.net.URL;
+import java.util.List;
+import java.util.logging.Logger;
+
+import org.fourthline.cling.UpnpService;
 import org.fourthline.cling.model.gena.RemoteGENASubscription;
 import org.fourthline.cling.model.message.StreamResponseMessage;
 import org.fourthline.cling.model.message.gena.IncomingSubscribeResponseMessage;
 import org.fourthline.cling.model.message.gena.OutgoingSubscribeRequestMessage;
-import org.fourthline.cling.UpnpService;
 import org.fourthline.cling.protocol.SendingSync;
-
-import java.util.logging.Logger;
 
 /**
  * Establishing a GENA event subscription with a remote host.
@@ -61,6 +63,17 @@ public class SendingSubscribe extends SendingSync<OutgoingSubscribeRequestMessag
                       )
               )
         );
+        
+        List<URL> urls = subscription.getEventCallbackURLs(
+                upnpService.getRouter().getActiveStreamServers(
+                        subscription.getService().getDevice().getIdentity().getDiscoveredOnLocalAddress()
+                ),
+                upnpService.getConfiguration().getNamespace()
+        );
+        
+        for(URL url : urls) {
+        	log.info("callback URL: " + url);
+        }
 
         this.subscription = subscription;
     }

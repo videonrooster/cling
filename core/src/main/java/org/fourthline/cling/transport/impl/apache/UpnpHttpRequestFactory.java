@@ -17,12 +17,12 @@
 
 package org.fourthline.cling.transport.impl.apache;
 
-import org.apache.http.HttpRequest;
-import org.apache.http.MethodNotSupportedException;
-import org.apache.http.RequestLine;
-import org.apache.http.impl.DefaultHttpRequestFactory;
-import org.apache.http.message.BasicHttpEntityEnclosingRequest;
-import org.apache.http.message.BasicHttpRequest;
+import com.bubblesoft.org.apache.http.HttpRequest;
+import com.bubblesoft.org.apache.http.MethodNotSupportedException;
+import com.bubblesoft.org.apache.http.RequestLine;
+import com.bubblesoft.org.apache.http.impl.DefaultHttpRequestFactory;
+import com.bubblesoft.org.apache.http.message.BasicHttpEntityEnclosingRequest;
+import com.bubblesoft.org.apache.http.message.BasicHttpRequest;
 
 /**
  * This is how you add new HTTP methods to Apache HTTP Components.

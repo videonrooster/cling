@@ -17,12 +17,12 @@
 
 package org.fourthline.cling.model.message.header;
 
-import org.seamless.util.Exceptions;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.seamless.util.Exceptions;
 
 /**
  * Transforms known and standardized UPnP/HTTP headers from/to string representation.

@@ -137,12 +137,15 @@ public class LocalDeviceBindingAdvertisementTest {
 
         private static LocalDevice createTestDevice() throws Exception {
             LocalServiceBinder binder = new AnnotationLocalServiceBinder();
-            return new LocalDevice(
+            LocalDevice device = new LocalDevice(
                     SampleData.createLocalDeviceIdentity(),
                     new UDADeviceType("BinaryLight", 1),
                     new DeviceDetails("Example Binary Light"),
                     binder.read(DemoBinaryLight.class)
             );
+            device.setAdvertising(true); // BBMOD: by default local device is *not* advertising. Must set to true so tests expecting advertising pass 
+            return device;
+
         }
 
         @UpnpStateVariable(defaultValue = "0", sendEvents = false)

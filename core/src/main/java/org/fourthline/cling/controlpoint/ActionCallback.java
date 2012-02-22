@@ -88,6 +88,11 @@ public abstract class ActionCallback implements Runnable {
         }
     }
 
+    public static interface ActionCallbackInterceptor {
+    	public void preExecute(ActionInvocation actionInvocation);
+    	public void postExecute(ActionInvocation actionInvocation);
+    }
+
     protected final ActionInvocation actionInvocation;
 
     protected ControlPoint controlPoint;
@@ -116,13 +121,22 @@ public abstract class ActionCallback implements Runnable {
 
     public void run() {
         Service service = actionInvocation.getAction().getService();
+        ActionCallbackInterceptor actionCallbackInterceptor = actionInvocation.getAction().getActionCallbackInterceptor();
 
         // Local execution
         if (service instanceof LocalService) {
             LocalService localService = (LocalService)service;
 
+            if(actionCallbackInterceptor != null) {
+            	actionCallbackInterceptor.preExecute(actionInvocation);
+            }
+
             // Executor validates input inside the execute() call immediately
             localService.getExecutor(actionInvocation.getAction()).execute(actionInvocation);
+
+            if(actionCallbackInterceptor != null) {
+            	actionCallbackInterceptor.postExecute(actionInvocation);
+            }
 
             if (actionInvocation.getFailure() != null) {
                 failure(actionInvocation, null);
@@ -144,7 +158,16 @@ public abstract class ActionCallback implements Runnable {
 
             // Do it
             SendingAction prot = getControlPoint().getProtocolFactory().createSendingAction(actionInvocation, controLURL);
+            
+            if(actionCallbackInterceptor != null) {
+            	actionCallbackInterceptor.preExecute(actionInvocation);
+            }
+            
             prot.run();
+            
+            if(actionCallbackInterceptor != null) {
+            	actionCallbackInterceptor.postExecute(actionInvocation);
+            }
 
             IncomingActionResponseMessage response = prot.getOutputMessage();
 

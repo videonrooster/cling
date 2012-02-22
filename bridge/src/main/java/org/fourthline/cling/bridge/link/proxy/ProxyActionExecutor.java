@@ -17,10 +17,10 @@
 
 package org.fourthline.cling.bridge.link.proxy;
 
-import org.jboss.resteasy.client.ClientRequest;
-import org.jboss.resteasy.client.ClientResponse;
+import java.net.URL;
+import java.util.logging.Logger;
+
 import org.fourthline.cling.bridge.BridgeUpnpServiceConfiguration;
-import org.fourthline.cling.bridge.auth.AuthCredentials;
 import org.fourthline.cling.bridge.gateway.FormActionProcessor;
 import org.fourthline.cling.model.action.ActionException;
 import org.fourthline.cling.model.action.ActionExecutor;
@@ -30,10 +30,11 @@ import org.fourthline.cling.model.types.ErrorCode;
 import org.fourthline.cling.model.types.InvalidValueException;
 import org.seamless.util.Exceptions;
 
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.net.URL;
-import java.util.logging.Logger;
+import com.bubblesoft.org.apache.http.client.HttpResponseException;
+import com.bubblesoft.org.apache.http.client.methods.HttpPost;
+import com.bubblesoft.org.apache.http.entity.StringEntity;
+import com.bubblesoft.org.apache.http.impl.client.BasicResponseHandler;
+import com.bubblesoft.org.apache.http.protocol.HTTP;
 
 /**
  * @author Christian Bauer
@@ -44,12 +45,10 @@ public class ProxyActionExecutor implements ActionExecutor {
 
     final private BridgeUpnpServiceConfiguration configuration;
     final private URL controlURL;
-    final private AuthCredentials credentials;
 
-    protected ProxyActionExecutor(BridgeUpnpServiceConfiguration configuration, URL controlURL, AuthCredentials credentials) {
+    protected ProxyActionExecutor(BridgeUpnpServiceConfiguration configuration, URL controlURL) {
         this.configuration = configuration;
         this.controlURL = controlURL;
-        this.credentials = credentials;
     }
 
     public BridgeUpnpServiceConfiguration getConfiguration() {
@@ -64,40 +63,37 @@ public class ProxyActionExecutor implements ActionExecutor {
         return controlURL;
     }
 
-    public AuthCredentials getCredentials() {
-        return credentials;
-    }
-
     public void execute(ActionInvocation<LocalService> actionInvocation) {
 
         boolean failed = false;
         String responseBody = null;
-        try {
+        
             String requestURL = getControlURL().toString() + "/" + actionInvocation.getAction().getName();
-            log.fine("Sending POST to remote: " + requestURL);
-            ClientRequest request = new ClientRequest(requestURL);
+        //log.info("Sending POST to remote: " + requestURL);
 
-            request.header("Accept", MediaType.APPLICATION_FORM_URLENCODED);
-            request.body(
-                    MediaType.APPLICATION_FORM_URLENCODED,
-                    getActionProcessor().createFormString(actionInvocation)
-            );
+		HttpPost request = new HttpPost(requestURL);
 
-            getConfiguration().getAuthManager().write(getCredentials(), request);
-            ClientResponse<String> response = request.post(String.class);
 
-            log.fine("Received response: " + response.getStatus());
+        try {
+			request.addHeader("Accept", "application/x-www-form-urlencoded");
+			if(actionInvocation.getUserAgent() != null) {
+				request.setHeader(HTTP.USER_AGENT, actionInvocation.getUserAgent());
+			}
+			
+			StringEntity s = new StringEntity(getActionProcessor().createFormString(actionInvocation), "UTF-8");
 
-            if (response.getStatus() != Response.Status.OK.getStatusCode()) {
-                log.fine("Remote '" + actionInvocation + "' failed: " + response.getStatus());
-                failed = true;
-            }
+			s.setContentType("application/x-www-form-urlencoded");
+			request.setEntity(s);
 
-            responseBody = response.getEntity();
+			responseBody =  getConfiguration().getHttpClient().execute(request, new BasicResponseHandler());
 
-        } catch (Exception ex) {
-            log.fine("Remote '" + actionInvocation + "' failed: " + Exceptions.unwrap(ex));
+        } catch (Exception e) {
+        	if(e instanceof HttpResponseException) {
+        		log.severe("status code: " + ((HttpResponseException)e).getStatusCode() +", " + e.getMessage());
+        	}
+            log.warning("Remote '" + actionInvocation + "' failed: " + Exceptions.unwrap(e));
             failed = true;
+            e.printStackTrace();
         }
 
         if (failed && responseBody == null) {
