@@ -250,10 +250,8 @@ public class SwitchableRouterImpl implements SwitchableRouter {
      *         request connection/data read timeouts. Should be longer than
      *         it takes the router to be started/shutdown.
      */
-    /* Bumped up to 30 seconds */
     protected int getLockTimeoutMillis() {
-        // return 6000;
-        return 30000;
+        return 6000;
     }
 
     class DisabledNetworkAddressFactory implements NetworkAddressFactory {
