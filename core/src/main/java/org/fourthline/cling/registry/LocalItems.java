@@ -75,10 +75,10 @@ class LocalItems extends RegistryItems<LocalDevice, LocalGENASubscription> {
 
         deviceItems.add(localItem);
         log.fine("Registered local device: " + localItem);
-        
-        if (localDevice.isSendByeOnStart()){
-        	advertiseByebye(localDevice, false);
-        } 
+
+        if (localDevice.isSendByeOnStart()) {
+        	advertiseByebye(localDevice, true);
+        }
 
 
         if(localDevice.isAdvertising()) {
